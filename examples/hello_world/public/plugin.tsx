@@ -11,11 +11,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import type { AppMountParameters, CoreSetup, CoreStart, Plugin } from '@kbn/core/public';
 import type { DeveloperExamplesSetup } from '@kbn/developer-examples-plugin/public';
-
 interface SetupDeps {
   developerExamples: DeveloperExamplesSetup;
 }
-
 export class HelloWorldPlugin implements Plugin<void, void, SetupDeps> {
   public setup(core: CoreSetup, deps: SetupDeps) {
     // Register an application into the side navigation menu
@@ -27,7 +25,6 @@ export class HelloWorldPlugin implements Plugin<void, void, SetupDeps> {
         return () => ReactDOM.unmountComponentAtNode(element);
       },
     });
-
     // This section is only needed to get this example plugin to show up in our Developer Examples.
     deps.developerExamples.register({
       appId: 'helloWorld',

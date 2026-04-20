@@ -1,5 +1,5 @@
 {
-  "extends": "@kbn/tsconfig-base/tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "target/types"
   },
@@ -11,11 +11,6 @@
     "server/**/*.ts",
     "../../typings/**/*"
   ],
-  "exclude": [
-    "target/**/*",
-  ],
-  "kbn_references": [
-    "@kbn/core",
-    "@kbn/developer-examples-plugin"
-  ]
+  "exclude": ["target/**/*"],
+  "kbn_references": ["@kbn/core", "@kbn/developer-examples-plugin"]
 }
