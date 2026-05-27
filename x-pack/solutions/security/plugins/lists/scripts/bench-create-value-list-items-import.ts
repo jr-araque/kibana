@@ -28,7 +28,10 @@ const LIST_ID = 'bench-vl-imp-266239';
 
 async function initDataStreams(): Promise<void> {
   const res = await kbPost('/api/lists/index', {});
-  await res.json().catch(() => undefined);
+  if (!res.ok) {
+    const text = await res.text().catch(() => `(no body)`);
+    throw new Error(`Init data streams: HTTP ${res.status} — ${text}`);
+  }
 }
 
 async function resetList(): Promise<void> {

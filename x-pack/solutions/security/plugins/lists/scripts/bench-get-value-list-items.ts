@@ -51,7 +51,10 @@ function itemValue(i: number): string {
 
 async function initDataStreams(): Promise<void> {
   const res = await kbPost('/api/lists/index', {});
-  await res.json().catch(() => undefined);
+  if (!res.ok) {
+    const text = await res.text().catch(() => `(no body)`);
+    throw new Error(`Init data streams: HTTP ${res.status} — ${text}`);
+  }
 }
 
 async function setupItems(n: number): Promise<{ setupMs: number; itemIds: string[] }> {
