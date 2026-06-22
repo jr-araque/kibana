@@ -39,6 +39,7 @@ import type {
 import type { ConfigType } from '../../config';
 import {
   BufferLines,
+  bulkUpdateListItems,
   createListItem,
   deleteListItem,
   deleteListItemByValue,
@@ -54,12 +55,14 @@ import {
   searchListItemByValues,
   updateListItem,
 } from '../items';
+import type { BulkUpdateListItemsResult } from '../items';
 import listsItemsPolicy from '../items/list_item_policy.json';
 import listItemMappings from '../items/list_item_mappings.json';
 
 import listPolicy from './list_policy.json';
 import listMappings from './list_mappings.json';
 import type {
+  BulkUpdateListItemsClientOptions,
   ConstructorOptions,
   CreateListIfItDoesNotExistOptions,
   CreateListItemOptions,
@@ -892,6 +895,27 @@ export class ListClient {
       refresh,
       user,
       value,
+    });
+  };
+
+  /**
+   * Updates multiple list items in bulk.
+   * @param options
+   * @param options.items Array of items to update, each with an id, value, and optional meta/_version.
+   * @param options.refresh Determines when changes are made visible to search.
+   */
+  public bulkUpdateListItems = async ({
+    items,
+    refresh,
+  }: BulkUpdateListItemsClientOptions): Promise<BulkUpdateListItemsResult> => {
+    const { esClient, user } = this;
+    const listItemName = this.getListItemName();
+    return bulkUpdateListItems({
+      esClient,
+      items,
+      listItemIndex: listItemName,
+      refresh,
+      user,
     });
   };
 

@@ -333,3 +333,18 @@ export interface GetImportFilename {
   /** The stream to pull the import from */
   stream: Readable;
 }
+
+/**
+ * ListClient.bulkUpdateListItems
+ * {@link ListClient.bulkUpdateListItems}
+ */
+export interface BulkUpdateListItemsClientOptions {
+  /** Array of items to update, each with an id, value, and optional meta/_version. */
+  items: Array<{
+    _version: _VersionOrUndefined;
+    id: string;
+    meta: MetaOrUndefined;
+    value: string;
+  }>;
+  refresh?: RefreshWithWaitFor;
+}

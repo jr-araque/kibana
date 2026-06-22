@@ -6,6 +6,7 @@
  */
 
 export * from './create_endpoint_list_item_route';
+export * from './list_item/bulk_update_list_item_route';
 export * from './create_endpoint_list_route';
 export * from './create_exception_list_item_route';
 export * from './create_exception_list_route';

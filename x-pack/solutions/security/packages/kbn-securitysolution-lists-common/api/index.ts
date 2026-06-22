@@ -22,5 +22,6 @@ export * from './patch_list/patch_list.gen';
 export * from './read_list_index/read_list_index.gen';
 export * from './read_list_item/read_list_item.gen';
 export * from './read_list/read_list.gen';
+export * from './bulk_update_list_items/bulk_update_list_items.gen';
 export * from './update_list_item/update_list_item.gen';
 export * from './update_list/update_list.gen';
