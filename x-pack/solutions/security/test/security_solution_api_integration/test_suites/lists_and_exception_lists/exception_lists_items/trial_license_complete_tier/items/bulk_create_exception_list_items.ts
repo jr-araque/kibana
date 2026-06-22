@@ -8,7 +8,7 @@
 import expect from '@kbn/expect';
 
 import {
-  EXCEPTION_LIST_ITEM_BULK_CREATE_URL,
+  EXCEPTION_LIST_ITEMS_BULK_URL,
   EXCEPTION_LIST_URL,
 } from '@kbn/securitysolution-list-constants';
 import { getCreateExceptionListMinimalSchemaMock } from '@kbn/lists-plugin/common/schemas/request/create_exception_list_schema.mock';
@@ -43,7 +43,7 @@ export default ({ getService }: FtrProviderContext) => {
     describe('validation errors', () => {
       it('should return 404 if the exception list does not exist', async () => {
         const { body } = await supertest
-          .post(EXCEPTION_LIST_ITEM_BULK_CREATE_URL)
+          .post(EXCEPTION_LIST_ITEMS_BULK_URL)
           .set('kbn-xsrf', 'true')
           .send({
             items: [makeItem(1)],
@@ -66,7 +66,7 @@ export default ({ getService }: FtrProviderContext) => {
         const items = Array.from({ length: 1001 }, (_, i) => makeItem(i));
 
         const { body } = await supertest
-          .post(EXCEPTION_LIST_ITEM_BULK_CREATE_URL)
+          .post(EXCEPTION_LIST_ITEMS_BULK_URL)
           .set('kbn-xsrf', 'true')
           .send({
             items,
@@ -80,7 +80,7 @@ export default ({ getService }: FtrProviderContext) => {
 
       it('should return 400 if items array is empty', async () => {
         await supertest
-          .post(EXCEPTION_LIST_ITEM_BULK_CREATE_URL)
+          .post(EXCEPTION_LIST_ITEMS_BULK_URL)
           .set('kbn-xsrf', 'true')
           .send({
             items: [],
@@ -100,7 +100,7 @@ export default ({ getService }: FtrProviderContext) => {
           .expect(200);
 
         const { body } = await supertest
-          .post(EXCEPTION_LIST_ITEM_BULK_CREATE_URL)
+          .post(EXCEPTION_LIST_ITEMS_BULK_URL)
           .set('kbn-xsrf', 'true')
           .send({
             items: [makeItem(1), makeItem(2), makeItem(3)],
@@ -124,7 +124,7 @@ export default ({ getService }: FtrProviderContext) => {
           .expect(200);
 
         const { body } = await supertest
-          .post(EXCEPTION_LIST_ITEM_BULK_CREATE_URL)
+          .post(EXCEPTION_LIST_ITEMS_BULK_URL)
           .set('kbn-xsrf', 'true')
           .send({
             items: [
@@ -155,7 +155,7 @@ export default ({ getService }: FtrProviderContext) => {
           .expect(200);
 
         const { body } = await supertest
-          .post(EXCEPTION_LIST_ITEM_BULK_CREATE_URL)
+          .post(EXCEPTION_LIST_ITEMS_BULK_URL)
           .set('kbn-xsrf', 'true')
           .send({
             items: [makeItem(1), makeItem(1)],
@@ -178,7 +178,7 @@ export default ({ getService }: FtrProviderContext) => {
           .expect(200);
 
         const { body } = await supertest
-          .post(EXCEPTION_LIST_ITEM_BULK_CREATE_URL)
+          .post(EXCEPTION_LIST_ITEMS_BULK_URL)
           .set('kbn-xsrf', 'true')
           .send({
             items: [makeItem(1)],

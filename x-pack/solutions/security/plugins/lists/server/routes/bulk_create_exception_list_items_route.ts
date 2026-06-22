@@ -8,7 +8,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { transformError } from '@kbn/securitysolution-es-utils';
 import {
-  EXCEPTION_LIST_ITEM_BULK_CREATE_URL,
+  EXCEPTION_LIST_ITEMS_BULK_URL,
   MAX_EXCEPTION_BULK_CREATE_LIST_SIZE,
   MAX_EXCEPTION_LIST_SIZE,
 } from '@kbn/securitysolution-list-constants';
@@ -29,7 +29,7 @@ export const bulkCreateExceptionListItemsRoute = (router: ListsPluginRouter): vo
   router.versioned
     .post({
       access: 'public',
-      path: EXCEPTION_LIST_ITEM_BULK_CREATE_URL,
+      path: EXCEPTION_LIST_ITEMS_BULK_URL,
       security: {
         authz: {
           requiredPrivileges: [EXCEPTIONS_API_ALL],
