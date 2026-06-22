@@ -8,6 +8,7 @@
 import type { FtrProviderContext } from '../../../../../ftr_provider_context';
 export default function ({ loadTestFile }: FtrProviderContext) {
   describe('Exception Lists - Items APIs', function () {
+    loadTestFile(require.resolve('./bulk_create_exception_list_items'));
     loadTestFile(require.resolve('./create_exception_list_items'));
     loadTestFile(require.resolve('./read_exception_list_items'));
     loadTestFile(require.resolve('./update_exception_list_items'));
