@@ -43,7 +43,7 @@ const mockBulkResponse = (
     status: number;
     error?: { reason: string; type: string };
   }>
-) => ({
+): object => ({
   errors: items.some((item) => item.error != null),
   items: items.map((item) => ({
     create: {
@@ -97,12 +97,13 @@ describe('bulk_create_list_items', () => {
       })
     );
 
-    const bulkCall = (options.esClient.bulk as jest.Mock).mock.calls[0][0];
-    expect(bulkCall.body).toHaveLength(4);
-    expect(bulkCall.body[0]).toHaveProperty('create');
-    expect(bulkCall.body[1]).toHaveProperty('ip', VALUE);
-    expect(bulkCall.body[2]).toHaveProperty('create');
-    expect(bulkCall.body[3]).toHaveProperty('ip', VALUE_2);
+    const [[bulkCallArgs]] = (options.esClient.bulk as jest.Mock).mock.calls;
+    const { body } = bulkCallArgs;
+    expect(body).toHaveLength(4);
+    expect(body[0]).toHaveProperty('create');
+    expect(body[1]).toHaveProperty('ip', VALUE);
+    expect(body[2]).toHaveProperty('create');
+    expect(body[3]).toHaveProperty('ip', VALUE_2);
   });
 
   test('returns created items on success', async () => {

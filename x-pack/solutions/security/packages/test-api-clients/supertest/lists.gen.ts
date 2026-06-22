@@ -52,7 +52,7 @@ All value list items in the same list must be the same type. For example, each l
       */
   bulkCreateListItems(props: BulkCreateListItemsProps, kibanaSpace: string = 'default') {
     return supertest
-      .post(getRouteUrlForSpace('/api/lists/items/_bulk_create', kibanaSpace))
+      .post(getRouteUrlForSpace('/api/lists/items/_bulk', kibanaSpace))
       .set('kbn-xsrf', 'true')
       .set(ELASTIC_HTTP_VERSION_HEADER, '2023-10-31')
       .set(X_ELASTIC_INTERNAL_ORIGIN_REQUEST, 'kibana')

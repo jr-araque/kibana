@@ -7,7 +7,7 @@
 
 import expect from '@kbn/expect';
 
-import { LIST_URL, LIST_ITEM_BULK_CREATE_URL } from '@kbn/securitysolution-list-constants';
+import { LIST_URL, LIST_ITEM_BULK_URL } from '@kbn/securitysolution-list-constants';
 import { getCreateMinimalListSchemaMock } from '@kbn/lists-plugin/common/schemas/request/create_list_schema.mock';
 import { LIST_ID, VALUE, VALUE_2 } from '@kbn/lists-plugin/common/constants.mock';
 import type TestAgent from 'supertest/lib/agent';
@@ -33,7 +33,7 @@ export default ({ getService }: FtrProviderContext) => {
     describe('validation errors', () => {
       it('should give a 404 error that the list must exist first before being able to bulk create items', async () => {
         const { body } = await supertest
-          .post(LIST_ITEM_BULK_CREATE_URL)
+          .post(LIST_ITEM_BULK_URL)
           .set('kbn-xsrf', 'true')
           .send({ list_id: LIST_ID, value: [VALUE] })
           .expect(404);
@@ -62,7 +62,7 @@ export default ({ getService }: FtrProviderContext) => {
           .expect(200);
 
         const { body } = await supertest
-          .post(LIST_ITEM_BULK_CREATE_URL)
+          .post(LIST_ITEM_BULK_URL)
           .set('kbn-xsrf', 'true')
           .send({ list_id: LIST_ID, value: [VALUE, VALUE_2] })
           .expect(200);
@@ -93,7 +93,7 @@ export default ({ getService }: FtrProviderContext) => {
           .expect(200);
 
         const { body } = await supertest
-          .post(LIST_ITEM_BULK_CREATE_URL)
+          .post(LIST_ITEM_BULK_URL)
           .set('kbn-xsrf', 'true')
           .send({ list_id: LIST_ID, value: [VALUE] })
           .expect(200);
@@ -114,7 +114,7 @@ export default ({ getService }: FtrProviderContext) => {
           .expect(200);
 
         const { body } = await supertest
-          .post(LIST_ITEM_BULK_CREATE_URL)
+          .post(LIST_ITEM_BULK_URL)
           .set('kbn-xsrf', 'true')
           .send({ list_id: LIST_ID, value: [VALUE], meta: { key: 'value' } })
           .expect(200);

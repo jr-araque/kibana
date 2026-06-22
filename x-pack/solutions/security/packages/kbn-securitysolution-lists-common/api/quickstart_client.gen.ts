@@ -91,7 +91,7 @@ All value list items in the same list must be the same type. For example, each l
     this.log.info(`${new Date().toISOString()} Calling API BulkCreateListItems`);
     return this.kbnClient
       .request<BulkCreateListItemsResponse>({
-        path: '/api/lists/items/_bulk_create',
+        path: '/api/lists/items/_bulk',
         headers: {
           [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
         },

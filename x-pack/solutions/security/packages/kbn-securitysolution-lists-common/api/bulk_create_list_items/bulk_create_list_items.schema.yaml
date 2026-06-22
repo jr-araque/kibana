@@ -3,7 +3,7 @@ info:
   title: Bulk create value list items API endpoint
   version: '2023-10-31'
 paths:
-  /api/lists/items/_bulk_create:
+  /api/lists/items/_bulk:
     post:
       x-labels: [serverless, ess]
       operationId: BulkCreateListItems

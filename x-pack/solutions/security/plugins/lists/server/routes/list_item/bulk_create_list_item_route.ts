@@ -6,7 +6,7 @@
  */
 
 import { transformError } from '@kbn/securitysolution-es-utils';
-import { LIST_ITEM_BULK_CREATE_URL } from '@kbn/securitysolution-list-constants';
+import { LIST_ITEM_BULK_URL } from '@kbn/securitysolution-list-constants';
 import { buildRouteValidationWithZod } from '@kbn/zod-helpers/v4';
 import {
   BulkCreateListItemsRequestBody,
@@ -22,7 +22,7 @@ export const bulkCreateListItemRoute = (router: ListsPluginRouter): void => {
   router.versioned
     .post({
       access: 'public',
-      path: LIST_ITEM_BULK_CREATE_URL,
+      path: LIST_ITEM_BULK_URL,
       security: {
         authz: {
           requiredPrivileges: [LISTS_API_ALL],
