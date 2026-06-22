@@ -37,8 +37,10 @@ import type {
 } from '@kbn/securitysolution-io-ts-list-types';
 
 import type { ConfigType } from '../../config';
+import type { BulkCreateListItemsResult } from '../items';
 import {
   BufferLines,
+  bulkCreateListItems,
   createListItem,
   deleteListItem,
   deleteListItemByValue,
@@ -60,6 +62,7 @@ import listItemMappings from '../items/list_item_mappings.json';
 import listPolicy from './list_policy.json';
 import listMappings from './list_mappings.json';
 import type {
+  BulkCreateListItemsClientOptions,
   ConstructorOptions,
   CreateListIfItDoesNotExistOptions,
   CreateListItemOptions,
@@ -823,6 +826,27 @@ export class ListClient {
     return createListItem({
       esClient,
       id,
+      listId,
+      listItemIndex: listItemName,
+      meta,
+      refresh,
+      type,
+      user,
+      value,
+    });
+  };
+
+  public bulkCreateListItems = async ({
+    listId,
+    type,
+    value,
+    meta,
+    refresh,
+  }: BulkCreateListItemsClientOptions): Promise<BulkCreateListItemsResult> => {
+    const { esClient, user } = this;
+    const listItemName = this.getListItemName();
+    return bulkCreateListItems({
+      esClient,
       listId,
       listItemIndex: listItemName,
       meta,

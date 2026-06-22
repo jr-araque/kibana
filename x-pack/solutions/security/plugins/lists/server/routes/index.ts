@@ -10,6 +10,7 @@ export * from './create_endpoint_list_route';
 export * from './create_exception_list_item_route';
 export * from './create_exception_list_route';
 export * from './list_index/create_list_index_route';
+export * from './list_item/bulk_create_list_item_route';
 export * from './list_item/create_list_item_route';
 export * from './list/create_list_route';
 export * from './delete_endpoint_list_item_route';

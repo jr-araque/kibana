@@ -8,6 +8,7 @@
 import type { FtrProviderContext } from '../../../../../ftr_provider_context';
 export default function ({ loadTestFile }: FtrProviderContext) {
   describe('Value Lists - Items APIs', function () {
+    loadTestFile(require.resolve('./bulk_create_list_items'));
     loadTestFile(require.resolve('./create_list_items'));
     loadTestFile(require.resolve('./patch_list_items'));
     loadTestFile(require.resolve('./patch_list_items_migrations'));

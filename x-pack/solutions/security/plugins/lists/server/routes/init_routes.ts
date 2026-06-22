@@ -9,6 +9,7 @@ import type { ListsPluginRouter } from '../types';
 import type { ConfigType } from '../config';
 
 import {
+  bulkCreateListItemRoute,
   createEndpointListItemRoute,
   createEndpointListRoute,
   createExceptionListItemRoute,
@@ -68,6 +69,7 @@ export const initRoutes = (
   findListsBySizeRoute(router);
 
   // list items
+  bulkCreateListItemRoute(router);
   createListItemRoute(router);
   readListItemRoute(router);
   updateListItemRoute(router);

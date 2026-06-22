@@ -7,6 +7,7 @@
 
 export * from './model/list_common.gen';
 export * from './model/list_schemas.gen';
+export * from './bulk_create_list_items/bulk_create_list_items.gen';
 export * from './create_list_index/create_list_index.gen';
 export * from './create_list_item/create_list_item.gen';
 export * from './create_list/create_list.gen';

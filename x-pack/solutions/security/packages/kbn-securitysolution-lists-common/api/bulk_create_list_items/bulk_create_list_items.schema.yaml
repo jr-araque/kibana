@@ -1,0 +1,141 @@
+openapi: 3.0.0
+info:
+  title: Bulk create value list items API endpoint
+  version: '2023-10-31'
+paths:
+  /api/lists/items/_bulk_create:
+    post:
+      x-labels: [serverless, ess]
+      operationId: BulkCreateListItems
+      x-codegen-enabled: true
+      summary: Bulk create value list items
+      description: |
+        Create multiple value list items in a single request. All items are added to the specified value list.
+
+        All value list items in the same list must be the same type. For example, each list item in an `ip` list must define a specific IP address.
+        > info
+        > Before creating list items, you must create a list.
+      requestBody:
+        description: Bulk create request body
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                list_id:
+                  $ref: '../model/list_common.schema.yaml#/components/schemas/ListId'
+                value:
+                  type: array
+                  items:
+                    $ref: '../model/list_common.schema.yaml#/components/schemas/ListItemValue'
+                  minItems: 1
+                  maxItems: 1000
+                  description: Array of values to create as list items.
+                meta:
+                  $ref: '../model/list_common.schema.yaml#/components/schemas/ListItemMetadata'
+                refresh:
+                  type: string
+                  enum:
+                    - 'true'
+                    - 'false'
+                    - wait_for
+                  description: Determines when changes made by the request are made visible to search.
+                  example: wait_for
+              required:
+                - list_id
+                - value
+            examples:
+              ip_list:
+                value:
+                  list_id: ip_list
+                  value:
+                    - 127.0.0.1
+                    - 10.0.0.1
+                    - 192.168.1.1
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: boolean
+                    description: Indicates whether any items failed to be created.
+                  created_count:
+                    type: integer
+                    description: Number of items successfully created.
+                  error_count:
+                    type: integer
+                    description: Number of items that failed to be created.
+                  items:
+                    type: array
+                    items:
+                      $ref: '../model/list_schemas.schema.yaml#/components/schemas/ListItem'
+                    description: Successfully created list items.
+                  error_items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        index:
+                          type: integer
+                          description: The index of the item in the original request array.
+                        value:
+                          type: string
+                          description: The value that failed to be created.
+                        error:
+                          type: object
+                          properties:
+                            status_code:
+                              type: integer
+                            message:
+                              type: string
+                          required:
+                            - status_code
+                            - message
+                      required:
+                        - index
+                        - value
+                        - error
+                    description: Items that failed to be created with error details.
+                required:
+                  - errors
+                  - created_count
+                  - error_count
+                  - items
+                  - error_items
+        400:
+          description: Invalid input data response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '../../../../../../../src/platform/packages/shared/kbn-openapi-common/schemas/error_responses.schema.yaml#/components/schemas/PlatformErrorResponse'
+                  - $ref: '../../../../../../../src/platform/packages/shared/kbn-openapi-common/schemas/error_responses.schema.yaml#/components/schemas/SiemErrorResponse'
+        401:
+          description: Unsuccessful authentication response
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../../src/platform/packages/shared/kbn-openapi-common/schemas/error_responses.schema.yaml#/components/schemas/PlatformErrorResponse'
+        403:
+          description: Not enough privileges response
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../../src/platform/packages/shared/kbn-openapi-common/schemas/error_responses.schema.yaml#/components/schemas/PlatformErrorResponse'
+        404:
+          description: List not found response
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../../src/platform/packages/shared/kbn-openapi-common/schemas/error_responses.schema.yaml#/components/schemas/SiemErrorResponse'
+        500:
+          description: Internal server error response
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../../src/platform/packages/shared/kbn-openapi-common/schemas/error_responses.schema.yaml#/components/schemas/SiemErrorResponse'

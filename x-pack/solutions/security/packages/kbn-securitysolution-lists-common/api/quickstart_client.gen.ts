@@ -19,6 +19,10 @@ import type { ToolingLog } from '@kbn/tooling-log';
 import { ELASTIC_HTTP_VERSION_HEADER } from '@kbn/core-http-common';
 import { catchAxiosErrorFormatAndThrow } from '@kbn/securitysolution-utils';
 
+import type {
+  BulkCreateListItemsRequestBodyInput,
+  BulkCreateListItemsResponse,
+} from './bulk_create_list_items/bulk_create_list_items.gen';
 import type { CreateListIndexResponse } from './create_list_index/create_list_index.gen';
 import type {
   CreateListItemRequestBodyInput,
@@ -74,6 +78,27 @@ export class Client {
   constructor(options: ClientOptions) {
     this.kbnClient = options.kbnClient;
     this.log = options.log;
+  }
+  /**
+    * Create multiple value list items in a single request. All items are added to the specified value list.
+
+All value list items in the same list must be the same type. For example, each list item in an `ip` list must define a specific IP address.
+> info
+> Before creating list items, you must create a list.
+
+    */
+  async bulkCreateListItems(props: BulkCreateListItemsProps) {
+    this.log.info(`${new Date().toISOString()} Calling API BulkCreateListItems`);
+    return this.kbnClient
+      .request<BulkCreateListItemsResponse>({
+        path: '/api/lists/items/_bulk_create',
+        headers: {
+          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
+        },
+        method: 'POST',
+        body: props.body,
+      })
+      .catch(catchAxiosErrorFormatAndThrow);
   }
   /**
    * Create a new value list.
@@ -395,6 +420,9 @@ APIs (`read` vs `all` operations) are available before you create or import list
   }
 }
 
+export interface BulkCreateListItemsProps {
+  body: BulkCreateListItemsRequestBodyInput;
+}
 export interface CreateListProps {
   body: CreateListRequestBodyInput;
 }

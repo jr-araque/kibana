@@ -6,6 +6,7 @@
  */
 
 export * from './buffer_lines';
+export * from './bulk_create_list_items';
 export * from './create_list_item';
 export * from './create_list_items_bulk';
 export * from './delete_list_item_by_value';

@@ -22,6 +22,7 @@ import {
   X_ELASTIC_INTERNAL_ORIGIN_REQUEST,
 } from '@kbn/core-http-common';
 
+import type { BulkCreateListItemsRequestBodyInput } from '@kbn/securitysolution-lists-common/api/bulk_create_list_items/bulk_create_list_items.gen';
 import type { CreateListRequestBodyInput } from '@kbn/securitysolution-lists-common/api/create_list/create_list.gen';
 import type { CreateListItemRequestBodyInput } from '@kbn/securitysolution-lists-common/api/create_list_item/create_list_item.gen';
 import type { DeleteListRequestQueryInput } from '@kbn/securitysolution-lists-common/api/delete_list/delete_list.gen';
@@ -41,6 +42,22 @@ import type { FtrProviderContext } from '@kbn/ftr-common-functional-services';
 import { getRouteUrlForSpace } from '@kbn/spaces-plugin/common';
 
 const securitySolutionApiServiceFactory = (supertest: SuperTest.Agent) => ({
+  /**
+      * Create multiple value list items in a single request. All items are added to the specified value list.
+
+All value list items in the same list must be the same type. For example, each list item in an `ip` list must define a specific IP address.
+> info
+> Before creating list items, you must create a list.
+
+      */
+  bulkCreateListItems(props: BulkCreateListItemsProps, kibanaSpace: string = 'default') {
+    return supertest
+      .post(getRouteUrlForSpace('/api/lists/items/_bulk_create', kibanaSpace))
+      .set('kbn-xsrf', 'true')
+      .set(ELASTIC_HTTP_VERSION_HEADER, '2023-10-31')
+      .set(X_ELASTIC_INTERNAL_ORIGIN_REQUEST, 'kibana')
+      .send(props.body as object);
+  },
   /**
    * Create a new value list.
    */
@@ -279,6 +296,9 @@ export function SecuritySolutionApiProvider({ getService }: FtrProviderContext) 
   };
 }
 
+export interface BulkCreateListItemsProps {
+  body: BulkCreateListItemsRequestBodyInput;
+}
 export interface CreateListProps {
   body: CreateListRequestBodyInput;
 }

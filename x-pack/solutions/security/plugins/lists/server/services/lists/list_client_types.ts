@@ -326,6 +326,22 @@ export interface SearchListItemByValuesOptions {
 }
 
 /**
+ * ListClient.bulkCreateListItems
+ * {@link ListClient.bulkCreateListItems}
+ */
+export interface BulkCreateListItemsClientOptions {
+  /** The "list_id" this list items belong to. */
+  listId: string;
+  /** The type of list such as "boolean", "double", "text", "keyword", etc... */
+  type: Type;
+  /** The values of the list items to create. */
+  value: string[];
+  /** Additional meta data to associate with the list items as an object of "key/value" pairs. You can set this to "undefined" for no meta values. */
+  meta: MetaOrUndefined;
+  refresh?: RefreshWithWaitFor;
+}
+
+/**
  * ListClient.getImportFilename
  * {@link ListClient.getImportFilename}
  */
