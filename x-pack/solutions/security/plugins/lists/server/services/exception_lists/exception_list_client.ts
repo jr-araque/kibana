@@ -33,6 +33,7 @@ import type {
 } from '../extension_points';
 
 import type {
+  BulkCreateExceptionListItemsOptions,
   BulkDeleteExceptionListItemsOptions,
   ClosePointInTimeOptions,
   ConstructorOptions,
@@ -101,6 +102,7 @@ import { findValueListExceptionListItemsPointInTimeFinder } from './find_value_l
 import { findExceptionListItemPointInTimeFinder } from './find_exception_list_item_point_in_time_finder';
 import { duplicateExceptionListAndItems } from './duplicate_exception_list';
 import { updateOverwriteExceptionListItem } from './update_overwrite_exception_list_item';
+import { bulkCreateExceptionListItems } from './bulk_create_exception_list_items';
 import { bulkDeleteExceptionListItems } from './bulk_delete_exception_list_items';
 
 /**
@@ -858,6 +860,90 @@ export class ExceptionListClient {
     }
 
     return bulkDeleteExceptionListItems({ ids, namespaceType, savedObjectsClient });
+  };
+
+  /**
+   * Bulk create exception list items for a single exception list.
+   * Items are processed in chunks of 1000 to keep memory bounded.
+   * @param options
+   * @param options.listId the "list_id" of the parent exception list
+   * @param options.namespaceType saved object namespace (single | agnostic)
+   * @param options.items array of items to create
+   */
+  public bulkCreateExceptionListItems = async ({
+    listId,
+    namespaceType,
+    items,
+  }: BulkCreateExceptionListItemsOptions): Promise<{
+    items: ExceptionListItemSchema[];
+    errors: Array<{
+      item_id?: string;
+      list_id?: string;
+      error: { message: string; status_code: number };
+    }>;
+  }> => {
+    const { savedObjectsClient, user } = this;
+
+    const exceptionList = await getExceptionList({
+      id: undefined,
+      listId,
+      namespaceType,
+      savedObjectsClient,
+    });
+
+    if (exceptionList == null) {
+      throw SavedObjectsErrorHelpers.createGenericNotFoundError(
+        `Exception list with list_id: "${listId}" does not exist`
+      );
+    }
+
+    const CHUNK_SIZE = 1000;
+    const createdItems: ExceptionListItemSchema[] = [];
+    const errors: Array<{
+      item_id?: string;
+      list_id?: string;
+      error: { message: string; status_code: number };
+    }> = [];
+
+    const itemsWithListId = items.map((item) => ({
+      comments: item.comments,
+      description: item.description,
+      entries: item.entries,
+      expire_time: item.expireTime,
+      item_id: item.itemId,
+      list_id: listId,
+      meta: item.meta,
+      name: item.name,
+      namespace_type: namespaceType,
+      os_types: item.osTypes,
+      tags: item.tags,
+      type: item.type,
+    }));
+
+    for (let i = 0; i < itemsWithListId.length; i += CHUNK_SIZE) {
+      const chunk = itemsWithListId.slice(i, i + CHUNK_SIZE);
+      try {
+        const result = await bulkCreateExceptionListItems({
+          items: chunk,
+          savedObjectsClient,
+          user,
+        });
+        createdItems.push(...result);
+      } catch (err) {
+        for (const item of chunk) {
+          errors.push({
+            error: {
+              message: err.message ?? 'Unknown error during bulk create',
+              status_code: err.statusCode ?? 500,
+            },
+            item_id: item.item_id,
+            list_id: listId,
+          });
+        }
+      }
+    }
+
+    return { errors, items: createdItems };
   };
 
   /**

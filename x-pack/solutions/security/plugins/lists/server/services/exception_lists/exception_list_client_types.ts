@@ -215,6 +215,30 @@ export interface BulkDeleteExceptionListItemsOptions {
 }
 
 /**
+ * ExceptionListClient.bulkCreateExceptionListItems
+ * {@link ExceptionListClient.bulkCreateExceptionListItems}
+ */
+export interface BulkCreateExceptionListItemsOptions {
+  /** the "list_id" of the parent exception list */
+  listId: ListId;
+  /** saved object namespace (single | agnostic) */
+  namespaceType: NamespaceType;
+  /** the items to bulk create */
+  items: Array<{
+    itemId: ItemId;
+    entries: ExceptionListItemEntryArray;
+    name: Name;
+    description: Description;
+    comments: CreateCommentsArray;
+    osTypes: OsTypeArray;
+    tags: Tags;
+    type: ExceptionListItemType;
+    meta: MetaOrUndefined;
+    expireTime: ExpireTimeOrUndefined;
+  }>;
+}
+
+/**
  * ExceptionListClient.deleteEndpointListItem
  * {@link ExceptionListClient.deleteEndpointListItem}
  */

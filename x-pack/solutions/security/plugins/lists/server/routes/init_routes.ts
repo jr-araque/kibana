@@ -9,6 +9,7 @@ import type { ListsPluginRouter } from '../types';
 import type { ConfigType } from '../config';
 
 import {
+  bulkCreateExceptionListItemsRoute,
   createEndpointListItemRoute,
   createEndpointListRoute,
   createExceptionListItemRoute,
@@ -95,6 +96,7 @@ export const initRoutes = (
   duplicateExceptionsRoute(router);
 
   // exception list items
+  bulkCreateExceptionListItemsRoute(router);
   createExceptionListItemRoute(router);
   readExceptionListItemRoute(router);
   updateExceptionListItemRoute(router);

@@ -7,6 +7,7 @@
 
 export * from './model/exception_list_common.gen';
 export * from './model/exception_list_item_entry.gen';
+export * from './bulk_create_exception_list_items/bulk_create_exception_list_items.gen';
 export * from './create_exception_list_item/create_exception_list_item.gen';
 export * from './create_rule_exceptions/create_rule_exceptions.gen';
 export * from './create_shared_exceptions_list/create_shared_exceptions_list.gen';
