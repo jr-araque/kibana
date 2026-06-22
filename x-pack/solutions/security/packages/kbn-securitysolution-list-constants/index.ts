@@ -27,6 +27,8 @@ export const INTERNAL_EXCEPTION_FILTER = `${INTERNAL_LIST_URL}/_create_filter` a
  */
 export const EXCEPTION_LIST_URL = '/api/exception_lists';
 export const EXCEPTION_LIST_ITEM_URL = '/api/exception_lists/items';
+export const EXCEPTION_LIST_ITEMS_BULK_UPDATE_URL = `${EXCEPTION_LIST_ITEM_URL}/_bulk_update`;
+export const MAX_EXCEPTION_BULK_UPDATE_LIST_SIZE = 1000;
 
 /**
  * Internal exception list routes

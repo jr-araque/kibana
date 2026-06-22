@@ -41,6 +41,7 @@ export * from './list_item/read_list_item_route';
 export * from './list/read_list_route';
 export * from './list_privileges/read_list_privileges_route';
 export * from './summary_exception_list_route';
+export * from './bulk_update_exception_list_items_route';
 export * from './update_endpoint_list_item_route';
 export * from './update_exception_list_item_route';
 export * from './update_exception_list_route';

@@ -776,6 +776,62 @@ export class ExceptionListClient {
   };
 
   /**
+   * Bulk update exception list items, returning per-item results
+   * @param options.items array of items to update (each must have id or itemId)
+   */
+  public bulkUpdateExceptionListItems = async ({
+    items,
+  }: {
+    items: UpdateExceptionListItemOptions[];
+  }): Promise<{
+    items: ExceptionListItemSchema[];
+    errors: Array<{
+      item_id?: string;
+      id?: string;
+      error: { message: string; status_code: number };
+    }>;
+  }> => {
+    const updatedItems: ExceptionListItemSchema[] = [];
+    const errors: Array<{
+      item_id?: string;
+      id?: string;
+      error: { message: string; status_code: number };
+    }> = [];
+
+    for (const item of items) {
+      try {
+        const result = await this.updateOverwriteExceptionListItem(item);
+        if (result == null) {
+          errors.push({
+            error: {
+              message:
+                item.id != null
+                  ? `exception list item id: "${item.id}" does not exist`
+                  : `exception list item item_id: "${item.itemId}" does not exist`,
+              status_code: 404,
+            },
+            ...(item.id != null ? { id: item.id } : {}),
+            ...(item.itemId != null ? { item_id: item.itemId } : {}),
+          });
+        } else {
+          updatedItems.push(result);
+        }
+      } catch (err) {
+        errors.push({
+          error: {
+            message: err.message ?? 'Unknown error during bulk update',
+            status_code: err.statusCode ?? 500,
+          },
+          ...(item.id != null ? { id: item.id } : {}),
+          ...(item.itemId != null ? { item_id: item.itemId } : {}),
+        });
+      }
+    }
+
+    return { errors, items: updatedItems };
+  };
+
+  /**
    * Delete an exception list item by either id or item_id
    * @param options
    * @param options.itemId the "item_id" of an exception list item (Either this or id has to be defined)
