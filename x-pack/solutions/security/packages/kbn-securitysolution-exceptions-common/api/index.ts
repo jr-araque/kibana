@@ -21,6 +21,6 @@ export * from './import_exceptions/import_exceptions.gen';
 export * from './read_exception_list_item/read_exception_list_item.gen';
 export * from './read_exception_list/read_exception_list.gen';
 export * from './read_exception_list_summary/read_exception_list_summary.gen';
-export * from './bulk_update_exception_list_items/bulk_update_exception_list_items.gen';
+export * from './bulk_update_exception_list_items/bulk_update_exception_list_items';
 export * from './update_exception_list_item/update_exception_list_item.gen';
 export * from './update_exception_list/update_exception_list.gen';

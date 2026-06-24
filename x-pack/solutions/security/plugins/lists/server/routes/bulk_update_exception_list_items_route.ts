@@ -98,7 +98,7 @@ export const bulkUpdateExceptionListItemsRoute = (
                   itemId,
                   meta: item.meta,
                   name: item.name,
-                  namespaceType: item.namespace_type ?? 'single',
+                  namespaceType: item.namespace_type,
                   osTypes: ((item as { os_types?: string[] }).os_types ?? []) as OsTypeArray,
                   tags: (item as { tags?: string[] }).tags,
                   type: item.type,
