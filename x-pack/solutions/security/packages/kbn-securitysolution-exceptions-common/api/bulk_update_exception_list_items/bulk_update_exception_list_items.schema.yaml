@@ -1,0 +1,99 @@
+openapi: 3.0.0
+info:
+  title: Bulk update exception list items API endpoint
+  version: '2023-10-31'
+paths:
+  /api/exception_lists/items/_bulk:
+    put:
+      x-labels: [serverless, ess]
+      operationId: BulkUpdateExceptionListItems
+      x-codegen-enabled: true
+      summary: Bulk update exception list items
+      description: Update multiple exception list items in a single request.
+      requestBody:
+        description: Array of exception list items to update
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    oneOf:
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemGeneric'
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemEndpointList'
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemTrustedAppsWindows'
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemTrustedAppsMac'
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemTrustedAppsLinux'
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemTrustedDevicesWindows'
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemTrustedDevicesMac'
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemTrustedDevicesWindowsMac'
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemEventFilters'
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemHostIsolation'
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemBlocklistWindows'
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemBlocklistLinux'
+                      - $ref: '../update_exception_list_item/update_exception_list_item.schema.yaml#/components/schemas/UpdateExceptionListItemBlocklistMac'
+                  minItems: 1
+                  maxItems: 1000
+              required:
+                - items
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionListItem'
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BulkUpdateExceptionListItemsErrorItem'
+                  summary:
+                    $ref: '#/components/schemas/BulkUpdateExceptionListItemsSummary'
+                required:
+                  - items
+                  - errors
+                  - summary
+
+components:
+  schemas:
+    BulkUpdateExceptionListItemsErrorItem:
+      type: object
+      properties:
+        item_id:
+          type: string
+        id:
+          type: string
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            status_code:
+              type: integer
+          required:
+            - message
+            - status_code
+      required:
+        - error
+
+    BulkUpdateExceptionListItemsSummary:
+      type: object
+      properties:
+        succeeded:
+          type: integer
+        failed:
+          type: integer
+        total:
+          type: integer
+      required:
+        - succeeded
+        - failed
+        - total
