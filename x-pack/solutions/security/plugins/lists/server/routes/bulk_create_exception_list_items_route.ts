@@ -7,10 +7,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { transformError } from '@kbn/securitysolution-es-utils';
-import {
-  EXCEPTION_LIST_ITEMS_BULK_URL,
-  MAX_EXCEPTION_LIST_SIZE,
-} from '@kbn/securitysolution-list-constants';
+import { EXCEPTION_LIST_ITEMS_BULK_URL } from '@kbn/securitysolution-list-constants';
 import { buildRouteValidationWithZod } from '@kbn/zod-helpers/v4';
 import {
   BulkCreateExceptionListItemsRequestBody,
@@ -49,27 +46,6 @@ export const bulkCreateExceptionListItemsRoute = (router: ListsPluginRouter): vo
 
           const exceptionListsClient = await getExceptionListClient(context);
 
-          const currentItems = await exceptionListsClient.findExceptionListItem({
-            filter: undefined,
-            listId,
-            namespaceType,
-            page: 1,
-            perPage: 1,
-            pit: undefined,
-            searchAfter: undefined,
-            sortField: undefined,
-            sortOrder: undefined,
-          });
-
-          if (currentItems == null) {
-            return siemResponse.error({
-              body: `exception list id: "${listId}" does not exist`,
-              statusCode: 404,
-            });
-          }
-
-          const currentCount = currentItems.total;
-
           const itemsWithIds = items.map((item) => ({
             comments: item.comments,
             description: item.description,
@@ -101,13 +77,6 @@ export const bulkCreateExceptionListItemsRoute = (router: ListsPluginRouter): vo
               seen.add(item.itemId);
               deduplicatedItems.push(item);
             }
-          }
-
-          if (currentCount + deduplicatedItems.length > MAX_EXCEPTION_LIST_SIZE) {
-            return siemResponse.error({
-              body: `Cannot bulk create ${deduplicatedItems.length} items: exception list "${listId}" already has ${currentCount} items, which would exceed the max of ${MAX_EXCEPTION_LIST_SIZE}`,
-              statusCode: 400,
-            });
           }
 
           const result = await exceptionListsClient.bulkCreateExceptionListItems({

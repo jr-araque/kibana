@@ -24,7 +24,10 @@ import {
   createExceptionListItemSchema,
   updateExceptionListItemSchema,
 } from '@kbn/securitysolution-io-ts-list-types';
-import { ENDPOINT_ARTIFACT_LISTS } from '@kbn/securitysolution-list-constants';
+import {
+  ENDPOINT_ARTIFACT_LISTS,
+  MAX_EXCEPTION_LIST_SIZE,
+} from '@kbn/securitysolution-list-constants';
 import { createPromiseFromStreams } from '@kbn/utils';
 
 import type {
@@ -895,6 +898,24 @@ export class ExceptionListClient {
       throw SavedObjectsErrorHelpers.createGenericNotFoundError(
         `Exception list with list_id: "${listId}" does not exist`
       );
+    }
+
+    const currentPage = await findExceptionListItem({
+      filter: undefined,
+      listId,
+      namespaceType,
+      page: 1,
+      perPage: 1,
+      pit: undefined,
+      savedObjectsClient,
+      search: undefined,
+      searchAfter: undefined,
+      sortField: undefined,
+      sortOrder: undefined,
+    });
+
+    if (currentPage != null && currentPage.total + items.length > MAX_EXCEPTION_LIST_SIZE) {
+      throw Object.assign(new Error(`Cannot bulk create ${items.length} items: exception list "${listId}" already has ${currentPage.total} items, which would exceed the max of ${MAX_EXCEPTION_LIST_SIZE}`), { statusCode: 400 });
     }
 
     const CHUNK_SIZE = 1000;
