@@ -17,9 +17,22 @@ import {
   VALUE,
   VALUE_2,
 } from '../../../common/constants.mock';
+import { transformListItemToElasticQuery } from '../utils';
 
 import type { BulkCreateListItemsOptions } from './bulk_create_list_items';
 import { bulkCreateListItems } from './bulk_create_list_items';
+
+jest.mock('../utils', () => {
+  const actual = jest.requireActual('../utils');
+  return {
+    ...actual,
+    transformListItemToElasticQuery: jest.fn(actual.transformListItemToElasticQuery),
+  };
+});
+
+const mockTransform = transformListItemToElasticQuery as jest.MockedFunction<
+  typeof transformListItemToElasticQuery
+>;
 
 const getOptions = (
   overrides: Partial<BulkCreateListItemsOptions> = {}
@@ -63,6 +76,7 @@ const mockBulkResponse = (
 describe('bulk_create_list_items', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockTransform.mockImplementation(jest.requireActual('../utils').transformListItemToElasticQuery);
   });
 
   test('returns empty results for empty value array', async () => {
@@ -198,5 +212,99 @@ describe('bulk_create_list_items', () => {
     expect(options.esClient.bulk).toHaveBeenCalledWith(
       expect.objectContaining({ refresh: 'false' })
     );
+  });
+
+  test('reports transform errors for values that fail transformation', async () => {
+    mockTransform
+      .mockReturnValueOnce({ ip: VALUE })
+      .mockReturnValueOnce(null);
+
+    const options = getOptions({ value: [VALUE, 'bad-value'] });
+    (options.esClient.bulk as jest.Mock).mockResolvedValue(
+      mockBulkResponse([{ _id: 'id-1', _primary_term: 1, _seq_no: 0, status: 201 }])
+    );
+
+    const result = await bulkCreateListItems(options);
+
+    expect(result.errors).toBe(true);
+    expect(result.created_count).toBe(1);
+    expect(result.error_count).toBe(1);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].value).toBe(VALUE);
+    expect(result.error_items).toEqual([
+      {
+        error: {
+          message: `Unable to transform value "bad-value" for type "${TYPE}"`,
+          status_code: 400,
+        },
+        index: 1,
+        value: 'bad-value',
+      },
+    ]);
+  });
+
+  test('returns early without calling ES bulk when all values fail transformation', async () => {
+    mockTransform.mockReturnValue(null);
+
+    const options = getOptions({ value: [VALUE, VALUE_2] });
+    const result = await bulkCreateListItems(options);
+
+    expect(options.esClient.bulk).not.toHaveBeenCalled();
+    expect(result.errors).toBe(true);
+    expect(result.created_count).toBe(0);
+    expect(result.error_count).toBe(2);
+    expect(result.items).toHaveLength(0);
+    expect(result.error_items).toHaveLength(2);
+    expect(result.error_items[0].index).toBe(0);
+    expect(result.error_items[1].index).toBe(1);
+  });
+
+  test('merges transform errors and ES errors with correct originalIndex tracking', async () => {
+    mockTransform
+      .mockReturnValueOnce({ ip: VALUE })
+      .mockReturnValueOnce(null)
+      .mockReturnValueOnce({ ip: '10.0.0.1' });
+
+    const options = getOptions({ value: [VALUE, 'bad-value', '10.0.0.1'] });
+    (options.esClient.bulk as jest.Mock).mockResolvedValue(
+      mockBulkResponse([
+        { _id: 'id-1', _primary_term: 1, _seq_no: 0, status: 201 },
+        {
+          _id: 'id-2',
+          _primary_term: 1,
+          _seq_no: 1,
+          error: { reason: 'mapper_parsing_exception', type: 'mapper_parsing_exception' },
+          status: 400,
+        },
+      ])
+    );
+
+    const result = await bulkCreateListItems(options);
+
+    expect(result.errors).toBe(true);
+    expect(result.created_count).toBe(1);
+    expect(result.error_count).toBe(2);
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].value).toBe(VALUE);
+
+    const transformError = result.error_items.find((e) => e.index === 1);
+    expect(transformError).toEqual({
+      error: {
+        message: `Unable to transform value "bad-value" for type "${TYPE}"`,
+        status_code: 400,
+      },
+      index: 1,
+      value: 'bad-value',
+    });
+
+    const esError = result.error_items.find((e) => e.index === 2);
+    expect(esError).toEqual({
+      error: {
+        message: 'mapper_parsing_exception',
+        status_code: 400,
+      },
+      index: 2,
+      value: '10.0.0.1',
+    });
   });
 });
