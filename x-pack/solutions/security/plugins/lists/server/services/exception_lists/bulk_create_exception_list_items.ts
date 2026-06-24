@@ -16,7 +16,7 @@ import { getSavedObjectType } from '@kbn/securitysolution-list-utils';
 
 import type { ExceptionListSoSchema } from '../../schemas/saved_objects';
 
-import { transformSavedObjectToExceptionListItem } from './utils';
+import { transformCreateCommentsToComments, transformSavedObjectToExceptionListItem } from './utils';
 
 interface BulkCreateExceptionListItemsOptions {
   items: CreateExceptionListItemSchema[];
@@ -37,7 +37,7 @@ export const bulkCreateExceptionListItems = async ({
 
     return {
       attributes: {
-        comments: [],
+        comments: transformCreateCommentsToComments({ incomingComments: item.comments ?? [], user }),
         created_at: dateNow,
         created_by: user,
         description: item.description,
