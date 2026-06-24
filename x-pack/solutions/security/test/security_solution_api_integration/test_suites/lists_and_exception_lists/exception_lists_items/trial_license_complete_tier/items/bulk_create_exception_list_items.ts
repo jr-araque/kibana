@@ -111,6 +111,7 @@ export default ({ getService }: FtrProviderContext) => {
 
         expect(body.items).to.have.length(3);
         expect(body.errors).to.have.length(0);
+        expect(body.summary).to.eql({ total: 3, succeeded: 3, failed: 0 });
         expect(body.items[0].item_id).to.be('bulk-item-1');
         expect(body.items[1].item_id).to.be('bulk-item-2');
         expect(body.items[2].item_id).to.be('bulk-item-3');
@@ -166,6 +167,7 @@ export default ({ getService }: FtrProviderContext) => {
 
         expect(body.items).to.have.length(1);
         expect(body.errors).to.have.length(1);
+        expect(body.summary).to.eql({ total: 2, succeeded: 1, failed: 1 });
         expect(body.errors[0].error.status_code).to.be(409);
         expect(body.errors[0].error.message).to.contain('Duplicate');
       });

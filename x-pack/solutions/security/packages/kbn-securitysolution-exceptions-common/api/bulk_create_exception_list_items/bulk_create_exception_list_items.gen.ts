@@ -72,6 +72,11 @@ export const BulkCreateExceptionListItemsResponse = lazySchema(() =>
   z.object({
     items: z.array(ExceptionListItem),
     errors: z.array(BulkCreateExceptionListItemsErrorItem),
+    summary: z.object({
+      total: z.number().int(),
+      succeeded: z.number().int(),
+      failed: z.number().int(),
+    }),
   })
 );
 export type BulkCreateExceptionListItemsResponse = z.infer<

@@ -65,9 +65,11 @@ export const bulkCreateExceptionListItemsRoute = (router: ListsPluginRouter): vo
             namespaceType,
           });
 
+          const total = result.items.length + result.errors.length;
           const responseBody = {
             errors: result.errors,
             items: result.items,
+            summary: { failed: result.errors.length, succeeded: result.items.length, total },
           };
 
           return response.ok({
