@@ -59,34 +59,14 @@ export const bulkCreateExceptionListItemsRoute = (router: ListsPluginRouter): vo
             type: item.type,
           }));
 
-          const seen = new Set<string>();
-          const deduplicatedItems = [];
-          const duplicateErrors = [];
-
-          for (const item of itemsWithIds) {
-            if (seen.has(item.itemId)) {
-              duplicateErrors.push({
-                error: {
-                  message: `Duplicate item_id: "${item.itemId}" found within the request`,
-                  status_code: 409,
-                },
-                item_id: item.itemId,
-                list_id: listId,
-              });
-            } else {
-              seen.add(item.itemId);
-              deduplicatedItems.push(item);
-            }
-          }
-
           const result = await exceptionListsClient.bulkCreateExceptionListItems({
-            items: deduplicatedItems,
+            items: itemsWithIds,
             listId,
             namespaceType,
           });
 
           const responseBody = {
-            errors: [...duplicateErrors, ...result.errors],
+            errors: result.errors,
             items: result.items,
           };
 

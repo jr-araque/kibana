@@ -931,8 +931,23 @@ export class ExceptionListClient {
       error: { message: string; status_code: number };
     }> = [];
 
+    const seen = new Set<string>();
+    const uniqueItems = [];
+    for (const item of items) {
+      if (seen.has(item.itemId)) {
+        errors.push({
+          error: { message: `Duplicate item_id: "${item.itemId}" found within the request`, status_code: 409 },
+          item_id: item.itemId,
+          list_id: listId,
+        });
+      } else {
+        seen.add(item.itemId);
+        uniqueItems.push(item);
+      }
+    }
+
     const validItems = exceptionList.type === 'endpoint'
-      ? items.filter((item) => {
+      ? uniqueItems.filter((item) => {
           const entryError = validateEndpointExceptionItemEntries(item.entries as never);
           if (entryError != null) {
             errors.push({ error: { message: entryError.body.join(', '), status_code: entryError.statusCode }, item_id: item.itemId, list_id: listId });
@@ -945,7 +960,7 @@ export class ExceptionListClient {
           }
           return true;
         })
-      : items;
+      : uniqueItems;
 
     const itemsWithListId = validItems.map((item) => ({
       comments: item.comments,
