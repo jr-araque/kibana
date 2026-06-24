@@ -9,7 +9,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { transformError } from '@kbn/securitysolution-es-utils';
 import {
   EXCEPTION_LIST_ITEMS_BULK_URL,
-  MAX_EXCEPTION_BULK_CREATE_LIST_SIZE,
   MAX_EXCEPTION_LIST_SIZE,
 } from '@kbn/securitysolution-list-constants';
 import { buildRouteValidationWithZod } from '@kbn/zod-helpers/v4';
@@ -18,8 +17,6 @@ import {
   BulkCreateExceptionListItemsResponse,
 } from '@kbn/securitysolution-exceptions-common/api';
 import { EXCEPTIONS_API_ALL } from '@kbn/security-solution-features/constants';
-import type { OsTypeArray } from '@kbn/securitysolution-io-ts-list-types';
-
 import type { ListsPluginRouter } from '../types';
 
 import { buildSiemResponse } from './utils';
@@ -49,13 +46,6 @@ export const bulkCreateExceptionListItemsRoute = (router: ListsPluginRouter): vo
         const siemResponse = buildSiemResponse(response);
         try {
           const { list_id: listId, namespace_type: namespaceType, items } = request.body;
-
-          if (items.length > MAX_EXCEPTION_BULK_CREATE_LIST_SIZE) {
-            return siemResponse.error({
-              body: `Cannot bulk create more than ${MAX_EXCEPTION_BULK_CREATE_LIST_SIZE} exception list items per request`,
-              statusCode: 400,
-            });
-          }
 
           const exceptionListsClient = await getExceptionListClient(context);
 
@@ -87,15 +77,15 @@ export const bulkCreateExceptionListItemsRoute = (router: ListsPluginRouter): vo
           }
 
           const itemsWithIds = items.map((item) => ({
-            comments: item.comments ?? [],
+            comments: item.comments,
             description: item.description,
             entries: item.entries,
             expireTime: item.expire_time,
             itemId: item.item_id ?? uuidv4(),
             meta: item.meta,
             name: item.name,
-            osTypes: (item.os_types ?? []) as OsTypeArray,
-            tags: item.tags ?? [],
+            osTypes: item.os_types,
+            tags: item.tags,
             type: item.type,
           }));
 

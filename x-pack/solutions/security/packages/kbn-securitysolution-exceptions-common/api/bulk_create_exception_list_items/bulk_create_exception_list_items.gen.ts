@@ -7,6 +7,7 @@
 
 import { z, lazySchema } from '@kbn/zod/v4';
 
+import { MAX_EXCEPTION_BULK_CREATE_LIST_SIZE } from '@kbn/securitysolution-list-constants';
 import {
   ExceptionListItem,
   ExceptionListItemHumanId,
@@ -43,7 +44,7 @@ export const BulkCreateExceptionListItemsRequestBody = lazySchema(() =>
   z.object({
     list_id: ExceptionListHumanId,
     namespace_type: ExceptionNamespaceType.optional().default('single'),
-    items: z.array(BulkCreateExceptionListItemData).min(1),
+    items: z.array(BulkCreateExceptionListItemData).min(1).max(MAX_EXCEPTION_BULK_CREATE_LIST_SIZE),
   })
 );
 export type BulkCreateExceptionListItemsRequestBody = z.infer<

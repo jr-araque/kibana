@@ -6,7 +6,6 @@
  */
 
 import { savedObjectsClientMock } from '@kbn/core/server/mocks';
-import type { SavedObjectsClientContract } from '@kbn/core/server';
 import { SavedObjectsErrorHelpers } from '@kbn/core/server';
 
 import { ENTRIES } from '../../../common/constants.mock';
