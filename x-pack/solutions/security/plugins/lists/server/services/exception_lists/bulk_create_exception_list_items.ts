@@ -22,7 +22,6 @@ interface BulkCreateExceptionListItemsOptions {
   items: CreateExceptionListItemSchema[];
   savedObjectsClient: SavedObjectsClientContract;
   user: string;
-  tieBreaker?: string;
 }
 
 interface BulkCreateExceptionListItemsResult {
@@ -33,7 +32,6 @@ interface BulkCreateExceptionListItemsResult {
 export const bulkCreateExceptionListItems = async ({
   items,
   savedObjectsClient,
-  tieBreaker,
   user,
 }: BulkCreateExceptionListItemsOptions): Promise<BulkCreateExceptionListItemsResult> => {
   const formattedItems = items.map((item) => {
@@ -56,7 +54,7 @@ export const bulkCreateExceptionListItems = async ({
         name: item.name,
         os_types: item.os_types,
         tags: item.tags,
-        tie_breaker_id: tieBreaker ?? uuidv4(),
+        tie_breaker_id: uuidv4(),
         type: item.type,
         updated_by: user,
         version: undefined,
