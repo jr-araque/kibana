@@ -928,7 +928,10 @@ export class ExceptionListClient {
           savedObjectsClient,
           user,
         });
-        createdItems.push(...result);
+        createdItems.push(...result.items);
+        for (const err of result.errors) {
+          errors.push({ ...err, list_id: listId });
+        }
       } catch (err) {
         for (const item of chunk) {
           errors.push({

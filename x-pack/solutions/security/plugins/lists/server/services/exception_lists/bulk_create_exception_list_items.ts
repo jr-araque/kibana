@@ -25,12 +25,17 @@ interface BulkCreateExceptionListItemsOptions {
   tieBreaker?: string;
 }
 
+interface BulkCreateExceptionListItemsResult {
+  items: ExceptionListItemSchema[];
+  errors: Array<{ item_id?: string; error: { message: string; status_code: number } }>;
+}
+
 export const bulkCreateExceptionListItems = async ({
   items,
   savedObjectsClient,
   tieBreaker,
   user,
-}: BulkCreateExceptionListItemsOptions): Promise<ExceptionListItemSchema[]> => {
+}: BulkCreateExceptionListItemsOptions): Promise<BulkCreateExceptionListItemsResult> => {
   const formattedItems = items.map((item) => {
     const savedObjectType = getSavedObjectType({ namespaceType: item.namespace_type ?? 'single' });
     const dateNow = new Date().toISOString();
@@ -63,9 +68,20 @@ export const bulkCreateExceptionListItems = async ({
   const { saved_objects: savedObjects } =
     await savedObjectsClient.bulkCreate<ExceptionListSoSchema>(formattedItems);
 
-  const result = savedObjects.map<ExceptionListItemSchema>((so) =>
-    transformSavedObjectToExceptionListItem({ savedObject: so })
-  );
+  const createdItems: ExceptionListItemSchema[] = [];
+  const errors: BulkCreateExceptionListItemsResult['errors'] = [];
 
-  return result;
+  for (let i = 0; i < savedObjects.length; i++) {
+    const so = savedObjects[i];
+    if (so.error != null) {
+      errors.push({
+        error: { message: so.error.message, status_code: so.error.statusCode ?? 500 },
+        item_id: items[i].item_id,
+      });
+    } else {
+      createdItems.push(transformSavedObjectToExceptionListItem({ savedObject: so }));
+    }
+  }
+
+  return { errors, items: createdItems };
 };
