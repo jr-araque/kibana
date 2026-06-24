@@ -6,10 +6,7 @@
  */
 
 import { transformError } from '@kbn/securitysolution-es-utils';
-import {
-  EXCEPTION_LIST_ITEMS_BULK_URL,
-  MAX_EXCEPTION_BULK_SIZE,
-} from '@kbn/securitysolution-list-constants';
+import { EXCEPTION_LIST_ITEMS_BULK_URL } from '@kbn/securitysolution-list-constants';
 import { buildRouteValidationWithZod } from '@kbn/zod-helpers/v4';
 import type { ExceptionListItemEntryArray } from '@kbn/securitysolution-exceptions-common/api';
 import {
@@ -60,13 +57,6 @@ export const bulkUpdateExceptionListItemsRoute = (
         const siemResponse = buildSiemResponse(response);
         try {
           const { items } = request.body;
-
-          if (items.length > MAX_EXCEPTION_BULK_SIZE) {
-            return siemResponse.error({
-              body: `Cannot bulk update more than ${MAX_EXCEPTION_BULK_SIZE} exception list items per request`,
-              statusCode: 400,
-            });
-          }
 
           const preValidationErrors: BulkUpdateExceptionListItemsResponse['errors'] = [];
           const validItems: UpdateExceptionListItemOptions[] = [];

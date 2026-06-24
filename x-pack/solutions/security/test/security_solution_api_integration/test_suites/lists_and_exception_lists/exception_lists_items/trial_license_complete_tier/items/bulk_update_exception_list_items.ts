@@ -142,6 +142,50 @@ export default ({ getService }: FtrProviderContext) => {
       expect(body.summary).to.eql({ succeeded: 0, failed: 1, total: 1 });
     });
 
+    it('should return a pre-validation error for non-append-only comments', async () => {
+      // Create parent list
+      await supertest
+        .post(EXCEPTION_LIST_URL)
+        .set('kbn-xsrf', 'true')
+        .send(getCreateExceptionListMinimalSchemaMock())
+        .expect(200);
+
+      // Create an item with a comment
+      const createPayload = {
+        ...getCreateExceptionListItemMinimalSchemaMock(),
+        comments: [{ comment: 'original comment' }],
+      };
+      await supertest
+        .post(EXCEPTION_LIST_ITEM_URL)
+        .set('kbn-xsrf', 'true')
+        .send(createPayload)
+        .expect(200);
+
+      // Try to bulk update with a new comment inserted before the existing one (non-append-only)
+      const updatePayload = getUpdateMinimalExceptionListItemSchemaMock();
+      const { body } = await supertest
+        .put(EXCEPTION_LIST_ITEMS_BULK_URL)
+        .set('kbn-xsrf', 'true')
+        .send({
+          items: [
+            {
+              ...updatePayload,
+              comments: [
+                { comment: 'new comment without id' },
+                { id: 'some-id', comment: 'existing comment with id after new' },
+              ],
+            },
+          ],
+        })
+        .expect(200);
+
+      expect(body.items).to.have.length(0);
+      expect(body.errors).to.have.length(1);
+      expect(body.errors[0].error.status_code).to.eql(400);
+      expect(body.errors[0].error.message).to.contain('append only');
+      expect(body.summary).to.eql({ succeeded: 0, failed: 1, total: 1 });
+    });
+
     it('should return the full response shape with summary', async () => {
       // Create parent list
       await supertest
