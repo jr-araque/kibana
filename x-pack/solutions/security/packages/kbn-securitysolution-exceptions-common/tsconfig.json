@@ -15,6 +15,5 @@
     "@kbn/core-http-common",
     "@kbn/securitysolution-utils",
     "@kbn/zod",
-    "@kbn/securitysolution-list-constants",
   ]
 }

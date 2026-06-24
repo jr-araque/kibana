@@ -21,6 +21,10 @@ import { replaceParams } from '@kbn/openapi-common/shared';
 import { catchAxiosErrorFormatAndThrow } from '@kbn/securitysolution-utils';
 
 import type {
+  BulkCreateExceptionListItemsRequestBodyInput,
+  BulkCreateExceptionListItemsResponse,
+} from './bulk_create_exception_list_items/bulk_create_exception_list_items.gen';
+import type {
   CreateExceptionListItemRequestBodyInput,
   CreateExceptionListItemResponse,
 } from './create_exception_list_item/create_exception_list_item.gen';
@@ -95,6 +99,22 @@ export class Client {
   constructor(options: ClientOptions) {
     this.kbnClient = options.kbnClient;
     this.log = options.log;
+  }
+  /**
+   * Create multiple exception list items for a single exception list in one request.
+   */
+  async bulkCreateExceptionListItems(props: BulkCreateExceptionListItemsProps) {
+    this.log.info(`${new Date().toISOString()} Calling API BulkCreateExceptionListItems`);
+    return this.kbnClient
+      .request<BulkCreateExceptionListItemsResponse>({
+        path: '/api/exception_lists/items/_bulk',
+        headers: {
+          [ELASTIC_HTTP_VERSION_HEADER]: '2023-10-31',
+        },
+        method: 'POST',
+        body: props.body,
+      })
+      .catch(catchAxiosErrorFormatAndThrow);
   }
   /**
     * An exception list groups exception items and can be associated with detection rules. You can assign exception lists to multiple detection rules.
@@ -373,6 +393,9 @@ export class Client {
   }
 }
 
+export interface BulkCreateExceptionListItemsProps {
+  body: BulkCreateExceptionListItemsRequestBodyInput;
+}
 export interface CreateExceptionListProps {
   body: CreateExceptionListRequestBodyInput;
 }

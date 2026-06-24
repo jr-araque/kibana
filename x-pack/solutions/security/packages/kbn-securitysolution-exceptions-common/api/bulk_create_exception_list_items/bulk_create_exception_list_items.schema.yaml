@@ -1,0 +1,157 @@
+openapi: 3.0.0
+info:
+  title: Bulk create exception list items API endpoint
+  version: '2023-10-31'
+paths:
+  /api/exception_lists/items/_bulk:
+    post:
+      x-labels: [serverless, ess]
+      operationId: BulkCreateExceptionListItems
+      x-codegen-enabled: true
+      summary: Bulk create exception list items
+      description: Create multiple exception list items for a single exception list in one request.
+      requestBody:
+        description: Exception list items to create
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                list_id:
+                  $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionListHumanId'
+                namespace_type:
+                  $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionNamespaceType'
+                  default: 'single'
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/BulkCreateExceptionListItemData'
+                  minItems: 1
+                  maxItems: 1000
+              required:
+                - list_id
+                - items
+      responses:
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionListItem'
+                  errors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BulkCreateExceptionListItemsErrorItem'
+                  summary:
+                    $ref: '#/components/schemas/BulkCreateExceptionListItemsSummary'
+                required:
+                  - items
+                  - errors
+                  - summary
+        400:
+          description: Invalid input data response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '../../../../../../../src/platform/packages/shared/kbn-openapi-common/schemas/error_responses.schema.yaml#/components/schemas/PlatformErrorResponse'
+                  - $ref: '../../../../../../../src/platform/packages/shared/kbn-openapi-common/schemas/error_responses.schema.yaml#/components/schemas/SiemErrorResponse'
+        401:
+          description: Unsuccessful authentication response
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../../src/platform/packages/shared/kbn-openapi-common/schemas/error_responses.schema.yaml#/components/schemas/PlatformErrorResponse'
+        403:
+          description: Not enough privileges response
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../../src/platform/packages/shared/kbn-openapi-common/schemas/error_responses.schema.yaml#/components/schemas/PlatformErrorResponse'
+        404:
+          description: Exception list not found response
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../../src/platform/packages/shared/kbn-openapi-common/schemas/error_responses.schema.yaml#/components/schemas/SiemErrorResponse'
+        500:
+          description: Internal server error response
+          content:
+            application/json:
+              schema:
+                $ref: '../../../../../../../src/platform/packages/shared/kbn-openapi-common/schemas/error_responses.schema.yaml#/components/schemas/SiemErrorResponse'
+
+components:
+  x-codegen-enabled: true
+  schemas:
+    BulkCreateExceptionListItemData:
+      type: object
+      properties:
+        item_id:
+          $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionListItemHumanId'
+        type:
+          $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionListItemType'
+        name:
+          $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionListItemName'
+        description:
+          $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionListItemDescription'
+        entries:
+          $ref: '../model/exception_list_item_entry.schema.yaml#/components/schemas/ExceptionListItemEntryArray'
+        os_types:
+          $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionListItemOsTypeArray'
+          default: []
+        tags:
+          $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionListItemTags'
+          default: []
+        meta:
+          $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionListItemMeta'
+        expire_time:
+          $ref: '../model/exception_list_common.schema.yaml#/components/schemas/ExceptionListItemExpireTime'
+        comments:
+          $ref: '../create_exception_list_item/create_exception_list_item.schema.yaml#/components/schemas/CreateExceptionListItemCommentArray'
+          default: []
+      required:
+        - type
+        - name
+        - description
+        - entries
+
+    BulkCreateExceptionListItemsErrorItem:
+      type: object
+      properties:
+        item_id:
+          type: string
+        list_id:
+          type: string
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+            status_code:
+              type: integer
+          required:
+            - message
+            - status_code
+      required:
+        - error
+
+    BulkCreateExceptionListItemsSummary:
+      type: object
+      properties:
+        total:
+          type: integer
+        succeeded:
+          type: integer
+        failed:
+          type: integer
+      required:
+        - total
+        - succeeded
+        - failed
