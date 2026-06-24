@@ -25,6 +25,8 @@ import {
   updateExceptionListItemSchema,
 } from '@kbn/securitysolution-io-ts-list-types';
 import { ENDPOINT_ARTIFACT_LISTS } from '@kbn/securitysolution-list-constants';
+import { transformError } from '@kbn/securitysolution-es-utils';
+import type { BulkUpdateExceptionListItemsErrorItem } from '@kbn/securitysolution-exceptions-common/api';
 import { createPromiseFromStreams } from '@kbn/utils';
 
 import type {
@@ -785,18 +787,10 @@ export class ExceptionListClient {
     items: UpdateExceptionListItemOptions[];
   }): Promise<{
     items: ExceptionListItemSchema[];
-    errors: Array<{
-      item_id?: string;
-      id?: string;
-      error: { message: string; status_code: number };
-    }>;
+    errors: BulkUpdateExceptionListItemsErrorItem[];
   }> => {
     const updatedItems: ExceptionListItemSchema[] = [];
-    const errors: Array<{
-      item_id?: string;
-      id?: string;
-      error: { message: string; status_code: number };
-    }> = [];
+    const errors: BulkUpdateExceptionListItemsErrorItem[] = [];
 
     for (const item of items) {
       try {
@@ -817,10 +811,11 @@ export class ExceptionListClient {
           updatedItems.push(result);
         }
       } catch (err) {
+        const transformed = transformError(err);
         errors.push({
           error: {
-            message: err.message ?? 'Unknown error during bulk update',
-            status_code: err.statusCode ?? 500,
+            message: transformed.message,
+            status_code: transformed.statusCode,
           },
           ...(item.id != null ? { id: item.id } : {}),
           ...(item.itemId != null ? { item_id: item.itemId } : {}),

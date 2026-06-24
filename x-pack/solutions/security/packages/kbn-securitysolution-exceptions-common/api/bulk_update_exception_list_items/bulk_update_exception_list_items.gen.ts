@@ -12,7 +12,7 @@ import { UpdateExceptionListItemRequestBody } from '../update_exception_list_ite
 
 export const BulkUpdateExceptionListItemsRequestBody = lazySchema(() =>
   z.object({
-    items: z.array(UpdateExceptionListItemRequestBody).min(1),
+    items: z.array(UpdateExceptionListItemRequestBody).min(1).max(1000),
   })
 );
 export type BulkUpdateExceptionListItemsRequestBody = z.infer<
@@ -36,10 +36,22 @@ export type BulkUpdateExceptionListItemsErrorItem = z.infer<
   typeof BulkUpdateExceptionListItemsErrorItem
 >;
 
+export const BulkUpdateExceptionListItemsSummary = lazySchema(() =>
+  z.object({
+    succeeded: z.number().int(),
+    failed: z.number().int(),
+    total: z.number().int(),
+  })
+);
+export type BulkUpdateExceptionListItemsSummary = z.infer<
+  typeof BulkUpdateExceptionListItemsSummary
+>;
+
 export const BulkUpdateExceptionListItemsResponse = lazySchema(() =>
   z.object({
     items: z.array(ExceptionListItem),
     errors: z.array(BulkUpdateExceptionListItemsErrorItem),
+    summary: BulkUpdateExceptionListItemsSummary,
   })
 );
 export type BulkUpdateExceptionListItemsResponse = z.infer<

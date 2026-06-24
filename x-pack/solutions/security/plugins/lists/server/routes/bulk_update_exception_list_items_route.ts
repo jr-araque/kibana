@@ -7,8 +7,8 @@
 
 import { transformError } from '@kbn/securitysolution-es-utils';
 import {
-  EXCEPTION_LIST_ITEMS_BULK_UPDATE_URL,
-  MAX_EXCEPTION_BULK_UPDATE_LIST_SIZE,
+  EXCEPTION_LIST_ITEMS_BULK_URL,
+  MAX_EXCEPTION_BULK_SIZE,
 } from '@kbn/securitysolution-list-constants';
 import { buildRouteValidationWithZod } from '@kbn/zod-helpers/v4';
 import type { ExceptionListItemEntryArray } from '@kbn/securitysolution-exceptions-common/api';
@@ -20,6 +20,7 @@ import { EXCEPTIONS_API_ALL } from '@kbn/security-solution-features/constants';
 import type { OsTypeArray } from '@kbn/securitysolution-io-ts-list-types';
 
 import type { ListsPluginRouter } from '../types';
+import type { ConfigType } from '../config';
 import type { UpdateExceptionListItemOptions } from '../services/exception_lists/exception_list_client_types';
 
 import { buildSiemResponse } from './utils';
@@ -27,11 +28,19 @@ import { validateCommentsToUpdate } from './utils/validate_comments_to_update';
 
 import { getExceptionListClient } from '.';
 
-export const bulkUpdateExceptionListItemsRoute = (router: ListsPluginRouter): void => {
+export const bulkUpdateExceptionListItemsRoute = (
+  router: ListsPluginRouter,
+  config: ConfigType
+): void => {
   router.versioned
     .put({
       access: 'public',
-      path: EXCEPTION_LIST_ITEMS_BULK_UPDATE_URL,
+      options: {
+        body: {
+          maxBytes: config.maxImportPayloadBytes,
+        },
+      },
+      path: EXCEPTION_LIST_ITEMS_BULK_URL,
       security: {
         authz: {
           requiredPrivileges: [EXCEPTIONS_API_ALL],
@@ -52,9 +61,9 @@ export const bulkUpdateExceptionListItemsRoute = (router: ListsPluginRouter): vo
         try {
           const { items } = request.body;
 
-          if (items.length > MAX_EXCEPTION_BULK_UPDATE_LIST_SIZE) {
+          if (items.length > MAX_EXCEPTION_BULK_SIZE) {
             return siemResponse.error({
-              body: `Cannot bulk update more than ${MAX_EXCEPTION_BULK_UPDATE_LIST_SIZE} exception list items per request`,
+              body: `Cannot bulk update more than ${MAX_EXCEPTION_BULK_SIZE} exception list items per request`,
               statusCode: 400,
             });
           }
@@ -68,7 +77,7 @@ export const bulkUpdateExceptionListItemsRoute = (router: ListsPluginRouter): vo
 
             if (id == null && itemId == null) {
               preValidationErrors.push({
-                error: { message: 'either id or item_id must be defined', status_code: 400 },
+                error: { message: 'either id or item_id need to be defined', status_code: 400 },
               });
             } else {
               const commentErrors = validateCommentsToUpdate(item.comments);
@@ -81,7 +90,7 @@ export const bulkUpdateExceptionListItemsRoute = (router: ListsPluginRouter): vo
               } else {
                 validItems.push({
                   _version: item._version,
-                  comments: item.comments ?? [],
+                  comments: item.comments,
                   description: item.description,
                   entries: item.entries as ExceptionListItemEntryArray,
                   expireTime: item.expire_time,
@@ -103,9 +112,15 @@ export const bulkUpdateExceptionListItemsRoute = (router: ListsPluginRouter): vo
             items: validItems,
           });
 
+          const allErrors = [...preValidationErrors, ...result.errors];
           const responseBody = {
-            errors: [...preValidationErrors, ...result.errors],
+            errors: allErrors,
             items: result.items,
+            summary: {
+              failed: allErrors.length,
+              succeeded: result.items.length,
+              total: items.length,
+            },
           };
 
           return response.ok({

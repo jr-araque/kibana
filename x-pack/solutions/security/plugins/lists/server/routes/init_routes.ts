@@ -99,7 +99,7 @@ export const initRoutes = (
   createExceptionListItemRoute(router);
   readExceptionListItemRoute(router);
   updateExceptionListItemRoute(router);
-  bulkUpdateExceptionListItemsRoute(router);
+  bulkUpdateExceptionListItemsRoute(router, config);
   deleteExceptionListItemRoute(router);
   findExceptionListItemRoute(router);
 
