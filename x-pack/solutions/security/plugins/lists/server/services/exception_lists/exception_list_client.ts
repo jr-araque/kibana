@@ -36,6 +36,8 @@ import type {
   ExtensionPointStorageClientInterface,
   ServerExtensionCallbackContext,
 } from '../extension_points';
+import { validateEndpointExceptionItemEntries } from '../../routes/validate';
+import { endpointDisallowedFields } from '../../routes/endpoint_disallowed_fields';
 
 import type {
   BulkCreateExceptionListItemsOptions,
@@ -110,8 +112,6 @@ import { updateOverwriteExceptionListItem } from './update_overwrite_exception_l
 import { bulkCreateExceptionListItems } from './bulk_create_exception_list_items';
 import { bulkDeleteExceptionListItems } from './bulk_delete_exception_list_items';
 // TODO: move these to a shared location — importing from routes in services is a layer violation
-import { validateEndpointExceptionItemEntries } from '../../routes/validate';
-import { endpointDisallowedFields } from '../../routes/endpoint_disallowed_fields';
 
 /**
  * Class for use for exceptions that are with trusted applications or
@@ -920,7 +920,9 @@ export class ExceptionListClient {
     });
 
     if (currentPage != null && currentPage.total + items.length > MAX_EXCEPTION_LIST_SIZE) {
-      throw new BadRequestError(`Cannot bulk create ${items.length} items: exception list "${listId}" already has ${currentPage.total} items, which would exceed the max of ${MAX_EXCEPTION_LIST_SIZE}`);
+      throw new BadRequestError(
+        `Cannot bulk create ${items.length} items: exception list "${listId}" already has ${currentPage.total} items, which would exceed the max of ${MAX_EXCEPTION_LIST_SIZE}`
+      );
     }
 
     const CHUNK_SIZE = MAX_EXCEPTION_BULK_CREATE_LIST_SIZE;
@@ -936,7 +938,10 @@ export class ExceptionListClient {
     for (const item of items) {
       if (seen.has(item.itemId)) {
         errors.push({
-          error: { message: `Duplicate item_id: "${item.itemId}" found within the request`, status_code: 409 },
+          error: {
+            message: `Duplicate item_id: "${item.itemId}" found within the request`,
+            status_code: 409,
+          },
           item_id: item.itemId,
           list_id: listId,
         });
@@ -946,21 +951,35 @@ export class ExceptionListClient {
       }
     }
 
-    const validItems = exceptionList.type === 'endpoint'
-      ? uniqueItems.filter((item) => {
-          const entryError = validateEndpointExceptionItemEntries(item.entries as never);
-          if (entryError != null) {
-            errors.push({ error: { message: entryError.body.join(', '), status_code: entryError.statusCode }, item_id: item.itemId, list_id: listId });
-            return false;
-          }
-          const disallowedField = item.entries.find((e) => endpointDisallowedFields.includes(e.field));
-          if (disallowedField != null) {
-            errors.push({ error: { message: `cannot add endpoint exception item on field ${disallowedField.field}`, status_code: 400 }, item_id: item.itemId, list_id: listId });
-            return false;
-          }
-          return true;
-        })
-      : uniqueItems;
+    const validItems =
+      exceptionList.type === 'endpoint'
+        ? uniqueItems.filter((item) => {
+            const entryError = validateEndpointExceptionItemEntries(item.entries as never);
+            if (entryError != null) {
+              errors.push({
+                error: { message: entryError.body.join(', '), status_code: entryError.statusCode },
+                item_id: item.itemId,
+                list_id: listId,
+              });
+              return false;
+            }
+            const disallowedField = item.entries.find((e) =>
+              endpointDisallowedFields.includes(e.field)
+            );
+            if (disallowedField != null) {
+              errors.push({
+                error: {
+                  message: `cannot add endpoint exception item on field ${disallowedField.field}`,
+                  status_code: 400,
+                },
+                item_id: item.itemId,
+                list_id: listId,
+              });
+              return false;
+            }
+            return true;
+          })
+        : uniqueItems;
 
     const itemsWithListId = validItems.map((item) => ({
       comments: item.comments,
