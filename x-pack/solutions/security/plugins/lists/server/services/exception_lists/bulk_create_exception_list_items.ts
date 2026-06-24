@@ -34,9 +34,9 @@ export const bulkCreateExceptionListItems = async ({
   savedObjectsClient,
   user,
 }: BulkCreateExceptionListItemsOptions): Promise<BulkCreateExceptionListItemsResult> => {
+  const dateNow = new Date().toISOString();
   const formattedItems = items.map((item) => {
     const savedObjectType = getSavedObjectType({ namespaceType: item.namespace_type ?? 'single' });
-    const dateNow = new Date().toISOString();
 
     return {
       attributes: {
