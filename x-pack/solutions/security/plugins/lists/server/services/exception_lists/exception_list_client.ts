@@ -107,6 +107,9 @@ import { duplicateExceptionListAndItems } from './duplicate_exception_list';
 import { updateOverwriteExceptionListItem } from './update_overwrite_exception_list_item';
 import { bulkCreateExceptionListItems } from './bulk_create_exception_list_items';
 import { bulkDeleteExceptionListItems } from './bulk_delete_exception_list_items';
+// TODO: move these to a shared location — importing from routes in services is a layer violation
+import { validateEndpointExceptionItemEntries } from '../../routes/validate';
+import { endpointDisallowedFields } from '../../routes/endpoint_disallowed_fields';
 
 /**
  * Class for use for exceptions that are with trusted applications or
@@ -926,7 +929,23 @@ export class ExceptionListClient {
       error: { message: string; status_code: number };
     }> = [];
 
-    const itemsWithListId = items.map((item) => ({
+    const validItems = exceptionList.type === 'endpoint'
+      ? items.filter((item) => {
+          const entryError = validateEndpointExceptionItemEntries(item.entries as never);
+          if (entryError != null) {
+            errors.push({ error: { message: entryError.body.join(', '), status_code: entryError.statusCode }, item_id: item.itemId, list_id: listId });
+            return false;
+          }
+          const disallowedField = item.entries.find((e) => endpointDisallowedFields.includes(e.field));
+          if (disallowedField != null) {
+            errors.push({ error: { message: `cannot add endpoint exception item on field ${disallowedField.field}`, status_code: 400 }, item_id: item.itemId, list_id: listId });
+            return false;
+          }
+          return true;
+        })
+      : items;
+
+    const itemsWithListId = validItems.map((item) => ({
       comments: item.comments,
       description: item.description,
       entries: item.entries,
