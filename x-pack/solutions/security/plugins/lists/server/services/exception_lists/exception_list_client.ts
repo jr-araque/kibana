@@ -26,6 +26,7 @@ import {
 } from '@kbn/securitysolution-io-ts-list-types';
 import {
   ENDPOINT_ARTIFACT_LISTS,
+  MAX_EXCEPTION_BULK_CREATE_LIST_SIZE,
   MAX_EXCEPTION_LIST_SIZE,
 } from '@kbn/securitysolution-list-constants';
 import { BadRequestError } from '@kbn/securitysolution-es-utils';
@@ -922,7 +923,7 @@ export class ExceptionListClient {
       throw new BadRequestError(`Cannot bulk create ${items.length} items: exception list "${listId}" already has ${currentPage.total} items, which would exceed the max of ${MAX_EXCEPTION_LIST_SIZE}`);
     }
 
-    const CHUNK_SIZE = 1000;
+    const CHUNK_SIZE = MAX_EXCEPTION_BULK_CREATE_LIST_SIZE;
     const createdItems: ExceptionListItemSchema[] = [];
     const errors: Array<{
       item_id?: string;
