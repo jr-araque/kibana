@@ -69,12 +69,6 @@ export const bulkCreateExceptionListItemsRoute = (router: ListsPluginRouter): vo
           }
 
           const currentCount = currentItems.total;
-          if (currentCount + items.length > MAX_EXCEPTION_LIST_SIZE) {
-            return siemResponse.error({
-              body: `Cannot bulk create ${items.length} items: exception list "${listId}" already has ${currentCount} items, which would exceed the max of ${MAX_EXCEPTION_LIST_SIZE}`,
-              statusCode: 400,
-            });
-          }
 
           const itemsWithIds = items.map((item) => ({
             comments: item.comments,
@@ -107,6 +101,13 @@ export const bulkCreateExceptionListItemsRoute = (router: ListsPluginRouter): vo
               seen.add(item.itemId);
               deduplicatedItems.push(item);
             }
+          }
+
+          if (currentCount + deduplicatedItems.length > MAX_EXCEPTION_LIST_SIZE) {
+            return siemResponse.error({
+              body: `Cannot bulk create ${deduplicatedItems.length} items: exception list "${listId}" already has ${currentCount} items, which would exceed the max of ${MAX_EXCEPTION_LIST_SIZE}`,
+              statusCode: 400,
+            });
           }
 
           const result = await exceptionListsClient.bulkCreateExceptionListItems({
