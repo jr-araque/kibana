@@ -241,6 +241,63 @@ describe('AutocompleteFieldMatchComponent', () => {
     expect(mockOnError).toHaveBeenLastCalledWith(false);
   });
 
+  test('it shows IP error while typing an invalid IP on an optional field', () => {
+    const mockOnError = jest.fn();
+    wrapper = mount(
+      <AutocompleteFieldMatchComponent
+        autocompleteService={autocompleteStartMock}
+        indexPattern={{
+          fields,
+          id: '1234',
+          title: 'logstash-*',
+        }}
+        isClearable={false}
+        isDisabled={false}
+        isLoading={false}
+        onChange={jest.fn()}
+        onError={mockOnError}
+        placeholder="Placeholder text"
+        selectedField={getField('ip')}
+        selectedValue=""
+      />
+    );
+
+    act(() => {
+      findEuiComboBox().onSearchChange('123097808');
+    });
+
+    expect(mockOnError).toHaveBeenLastCalledWith(true);
+  });
+
+  test('it defers IP error while typing on a required field before blur', () => {
+    const mockOnError = jest.fn();
+    wrapper = mount(
+      <AutocompleteFieldMatchComponent
+        autocompleteService={autocompleteStartMock}
+        indexPattern={{
+          fields,
+          id: '1234',
+          title: 'logstash-*',
+        }}
+        isClearable={false}
+        isDisabled={false}
+        isLoading={false}
+        isRequired
+        onChange={jest.fn()}
+        onError={mockOnError}
+        placeholder="Placeholder text"
+        selectedField={getField('ip')}
+        selectedValue=""
+      />
+    );
+
+    act(() => {
+      findEuiComboBox().onSearchChange('123097808');
+    });
+
+    expect(mockOnError).not.toHaveBeenCalledWith(true);
+  });
+
   test('it invokes "onChange" when new value selected', () => {
     const mockOnChange = jest.fn();
     wrapper = mount(

@@ -546,4 +546,37 @@ describe('AutocompleteFieldWildcardComponent', () => {
     const euiFormHelptext = wrapper.find(EuiFormHelpText);
     expect(euiFormHelptext.length).toBeFalsy();
   });
+
+  test('it accepts a wildcard pattern on an IP field without producing an IP error', () => {
+    const mockOnChange = jest.fn();
+    const mockOnError = jest.fn();
+    wrapper = mount(
+      <AutocompleteFieldWildcardComponent
+        autocompleteService={autocompleteStartMock}
+        indexPattern={{
+          fields,
+          id: '1234',
+          title: 'logstash-*',
+        }}
+        isClearable={false}
+        isDisabled={false}
+        isLoading={false}
+        onChange={mockOnChange}
+        onError={mockOnError}
+        onWarning={jest.fn()}
+        placeholder="Placeholder text"
+        selectedField={getField('ip')}
+        selectedValue=""
+      />
+    );
+
+    (
+      wrapper.find(EuiComboBox).props() as unknown as {
+        onCreateOption: (a: string) => void;
+      }
+    ).onCreateOption('192.168.*');
+
+    expect(mockOnChange).toHaveBeenCalledWith('192.168.*');
+    expect(mockOnError).not.toHaveBeenCalledWith(true);
+  });
 });

@@ -247,6 +247,114 @@ describe('AutocompleteFieldMatchAnyComponent', () => {
     expect(mockOnError).toHaveBeenLastCalledWith(false);
   });
 
+  test('it shows IP error while typing an invalid IP on an optional field', () => {
+    const mockOnError = jest.fn();
+    wrapper = mount(
+      <AutocompleteFieldMatchAnyComponent
+        autocompleteService={autocompleteStartMock}
+        indexPattern={{
+          fields,
+          id: '1234',
+          title: 'logstash-*',
+        }}
+        isClearable={false}
+        isDisabled={false}
+        isLoading={false}
+        onChange={jest.fn()}
+        onError={mockOnError}
+        placeholder="Placeholder text"
+        rowLabel="Row Label"
+        selectedField={getField('ip')}
+        selectedValue={[]}
+      />
+    );
+
+    act(() => {
+      (
+        wrapper.find(EuiComboBox).props() as unknown as {
+          onSearchChange: (value: string) => void;
+        }
+      ).onSearchChange('123097808');
+    });
+
+    expect(mockOnError).toHaveBeenLastCalledWith(true);
+  });
+
+  test('it defers IP error while typing on a required field before blur', () => {
+    const mockOnError = jest.fn();
+    wrapper = mount(
+      <AutocompleteFieldMatchAnyComponent
+        autocompleteService={autocompleteStartMock}
+        indexPattern={{
+          fields,
+          id: '1234',
+          title: 'logstash-*',
+        }}
+        isClearable={false}
+        isDisabled={false}
+        isLoading={false}
+        isRequired
+        onChange={jest.fn()}
+        onError={mockOnError}
+        placeholder="Placeholder text"
+        rowLabel="Row Label"
+        selectedField={getField('ip')}
+        selectedValue={[]}
+      />
+    );
+
+    act(() => {
+      (
+        wrapper.find(EuiComboBox).props() as unknown as {
+          onSearchChange: (value: string) => void;
+        }
+      ).onSearchChange('123097808');
+    });
+
+    expect(mockOnError).not.toHaveBeenCalledWith(true);
+  });
+
+  test('it clears IP error when the selected field changes', () => {
+    const mockOnError = jest.fn();
+    wrapper = mount(
+      <AutocompleteFieldMatchAnyComponent
+        autocompleteService={autocompleteStartMock}
+        indexPattern={{
+          fields,
+          id: '1234',
+          title: 'logstash-*',
+        }}
+        isClearable={false}
+        isDisabled={false}
+        isLoading={false}
+        isRequired
+        onChange={jest.fn()}
+        onError={mockOnError}
+        placeholder="Placeholder text"
+        rowLabel="Row Label"
+        selectedField={getField('ip')}
+        selectedValue={[]}
+      />
+    );
+
+    act(() => {
+      (
+        wrapper.find(EuiComboBox).props() as unknown as {
+          onCreateOption: (value: string) => boolean;
+        }
+      ).onCreateOption('123097808');
+    });
+
+    expect(mockOnError).toHaveBeenLastCalledWith(true);
+
+    act(() => {
+      wrapper.setProps({ selectedField: getField('machine.os.raw') });
+    });
+    wrapper.update();
+
+    expect(mockOnError).toHaveBeenLastCalledWith(false);
+  });
+
   test('it invokes "onChange" when new value selected', async () => {
     const mockOnChange = jest.fn();
     wrapper = mount(

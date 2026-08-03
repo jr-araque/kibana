@@ -168,8 +168,10 @@ export const AutocompleteFieldMatchAnyComponent: React.FC<AutocompleteFieldMatch
     [isLoading, isLoadingSuggestions]
   );
   useEffect((): void => {
+    setError(undefined);
+    if (onError != null) onError(false);
     handleSpacesWarning(selectedValue);
-  }, [selectedField, selectedValue, handleSpacesWarning]);
+  }, [selectedField?.name, selectedField?.type, selectedValue, handleSpacesWarning, onError]);
 
   const defaultInput = useMemo((): JSX.Element => {
     return (
