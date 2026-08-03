@@ -27,6 +27,10 @@ export const DATE_ERR = i18n.translate('autocomplete.invalidDateError', {
   defaultMessage: 'Not a valid date',
 });
 
+export const IP_ERR = i18n.translate('autocomplete.invalidIpError', {
+  defaultMessage: 'Not a valid IP address',
+});
+
 export const BINARY_TYPE_NOT_SUPPORTED = i18n.translate('autocomplete.invalidBinaryType', {
   defaultMessage: 'Binary fields are currently unsupported',
 });
@@ -74,6 +78,7 @@ export default {
   FIELD_REQUIRED_ERR,
   NUMBER_ERR,
   DATE_ERR,
+  IP_ERR,
   FIELD_SPACE_WARNING,
   BINARY_TYPE_NOT_SUPPORTED,
 };

@@ -118,7 +118,13 @@ export const AutocompleteFieldMatchAnyComponent: React.FC<AutocompleteFieldMatch
       }
 
       if (searchVal !== '' && selectedField != null) {
-        const err = paramIsValid(searchVal, selectedField, isRequired, touched);
+        const err = paramIsValid(
+          searchVal,
+          selectedField,
+          isRequired,
+          touched,
+          OperatorTypeEnum.MATCH_ANY
+        );
         handleError(err);
 
         if (!err) handleSpacesWarning([searchVal]);
@@ -131,7 +137,7 @@ export const AutocompleteFieldMatchAnyComponent: React.FC<AutocompleteFieldMatch
 
   const handleCreateOption = useCallback(
     (option: string): boolean => {
-      const err = paramIsValid(option, selectedField, isRequired, touched);
+      const err = paramIsValid(option, selectedField, isRequired, true, OperatorTypeEnum.MATCH_ANY);
       handleError(err);
 
       if (err != null) {
@@ -144,7 +150,7 @@ export const AutocompleteFieldMatchAnyComponent: React.FC<AutocompleteFieldMatch
       handleSpacesWarning([option]);
       return true;
     },
-    [handleError, handleSpacesWarning, isRequired, onChange, selectedField, selectedValue, touched]
+    [handleError, handleSpacesWarning, isRequired, onChange, selectedField, selectedValue]
   );
 
   const setIsTouchedValue = useCallback((): void => {

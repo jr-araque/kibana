@@ -19,6 +19,7 @@ import { autocompleteStartMock } from '../autocomplete/index.mock';
 jest.mock('../hooks/use_field_value_autocomplete');
 jest.mock('../translations', () => ({
   FIELD_SPACE_WARNING: 'Warning: there is a space',
+  IP_ERR: 'Not a valid IP address',
 }));
 describe('AutocompleteFieldMatchComponent', () => {
   let wrapper: ReactWrapper;
@@ -31,7 +32,7 @@ describe('AutocompleteFieldMatchComponent', () => {
     wrapper.find(EuiComboBox).props() as unknown as {
       onChange: (a: EuiComboBoxOptionOption[]) => void;
       onSearchChange: (a: string) => void;
-      onCreateOption: (a: string) => void;
+      onCreateOption: (a: string) => boolean | undefined;
     };
 
   beforeEach(() => {
@@ -197,6 +198,47 @@ describe('AutocompleteFieldMatchComponent', () => {
     findEuiComboBox().onCreateOption('127.0.0.1');
 
     expect(mockOnChange).toHaveBeenCalledWith('127.0.0.1');
+  });
+
+  test('it rejects an invalid IP and clears the error after a valid IP is entered', () => {
+    const mockOnChange = jest.fn();
+    const mockOnError = jest.fn();
+    wrapper = mount(
+      <AutocompleteFieldMatchComponent
+        autocompleteService={autocompleteStartMock}
+        indexPattern={{
+          fields,
+          id: '1234',
+          title: 'logstash-*',
+        }}
+        isClearable={false}
+        isDisabled={false}
+        isLoading={false}
+        isRequired
+        onChange={mockOnChange}
+        onError={mockOnError}
+        placeholder="Placeholder text"
+        selectedField={getField('ip')}
+        selectedValue=""
+      />
+    );
+
+    let result: boolean | undefined;
+    act(() => {
+      result = findEuiComboBox().onCreateOption('123097808');
+    });
+
+    expect(result).toBe(false);
+    expect(mockOnChange).not.toHaveBeenCalled();
+    expect(mockOnError).toHaveBeenLastCalledWith(true);
+
+    act(() => {
+      result = findEuiComboBox().onCreateOption('127.0.0.1');
+    });
+
+    expect(result).toBeUndefined();
+    expect(mockOnChange).toHaveBeenCalledWith('127.0.0.1');
+    expect(mockOnError).toHaveBeenLastCalledWith(false);
   });
 
   test('it invokes "onChange" when new value selected', () => {

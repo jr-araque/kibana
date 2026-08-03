@@ -149,7 +149,13 @@ export const AutocompleteFieldWildcardComponent: React.FC<AutocompleteFieldWildc
     const handleSearchChange = useCallback(
       (searchVal: string): void => {
         if (searchVal.trim() !== '' && selectedField != null) {
-          const err = paramIsValid(searchVal, selectedField, isRequired, touched);
+          const err = paramIsValid(
+            searchVal,
+            selectedField,
+            isRequired,
+            touched,
+            OperatorTypeEnum.WILDCARD
+          );
           handleError(err);
           handleWarning(warning);
           if (!err) handleSpacesWarning(searchVal);
@@ -177,7 +183,13 @@ export const AutocompleteFieldWildcardComponent: React.FC<AutocompleteFieldWildc
 
     const handleCreateOption = useCallback(
       (option: string): boolean | undefined => {
-        const err = paramIsValid(option, selectedField, isRequired, touched);
+        const err = paramIsValid(
+          option,
+          selectedField,
+          isRequired,
+          touched,
+          OperatorTypeEnum.WILDCARD
+        );
         handleError(err);
         handleWarning(warning);
 
@@ -206,7 +218,13 @@ export const AutocompleteFieldWildcardComponent: React.FC<AutocompleteFieldWildc
     const setIsTouchedValue = useCallback((): void => {
       setIsTouched(true);
 
-      const err = paramIsValid(selectedValue, selectedField, isRequired, true);
+      const err = paramIsValid(
+        selectedValue,
+        selectedField,
+        isRequired,
+        true,
+        OperatorTypeEnum.WILDCARD
+      );
       handleError(err);
       handleWarning(warning);
     }, [

@@ -151,7 +151,13 @@ export const AutocompleteFieldMatchComponent: React.FC<AutocompleteFieldMatchPro
   const handleSearchChange = useCallback(
     (searchVal: string): void => {
       if (searchVal !== '' && selectedField != null) {
-        const err = paramIsValid(searchVal, selectedField, isRequired, touched);
+        const err = paramIsValid(
+          searchVal,
+          selectedField,
+          isRequired,
+          touched,
+          OperatorTypeEnum.MATCH
+        );
         handleError(err);
         handleWarning(warning);
 
@@ -180,7 +186,7 @@ export const AutocompleteFieldMatchComponent: React.FC<AutocompleteFieldMatchPro
 
   const handleCreateOption = useCallback(
     (option: string): boolean | undefined => {
-      const err = paramIsValid(option, selectedField, isRequired, touched);
+      const err = paramIsValid(option, selectedField, isRequired, true, OperatorTypeEnum.MATCH);
       handleError(err);
       handleWarning(warning);
 
@@ -194,16 +200,7 @@ export const AutocompleteFieldMatchComponent: React.FC<AutocompleteFieldMatchPro
       onChange(option);
       return undefined;
     },
-    [
-      isRequired,
-      onChange,
-      selectedField,
-      touched,
-      handleError,
-      handleSpacesWarning,
-      handleWarning,
-      warning,
-    ]
+    [isRequired, onChange, selectedField, handleError, handleSpacesWarning, handleWarning, warning]
   );
 
   const handleNonComboBoxInputChange = useCallback(
@@ -224,7 +221,13 @@ export const AutocompleteFieldMatchComponent: React.FC<AutocompleteFieldMatchPro
   const setIsTouchedValue = useCallback((): void => {
     setIsTouched(true);
 
-    const err = paramIsValid(selectedValue, selectedField, isRequired, true);
+    const err = paramIsValid(
+      selectedValue,
+      selectedField,
+      isRequired,
+      true,
+      OperatorTypeEnum.MATCH
+    );
     handleError(err);
     handleWarning(warning);
   }, [setIsTouched, handleError, selectedValue, selectedField, isRequired, warning, handleWarning]);
