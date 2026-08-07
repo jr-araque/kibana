@@ -5,14 +5,49 @@
  * 2.0.
  */
 
+import type { estypes } from '@elastic/elasticsearch';
+import { partition } from 'lodash';
+
 import type { ExceptionListItemSchema } from '@kbn/securitysolution-io-ts-list-types';
-import { entriesList } from '@kbn/securitysolution-io-ts-list-types';
+import {
+  entriesList,
+  entriesMatch,
+  entriesMatchAny,
+  entriesExists,
+} from '@kbn/securitysolution-io-ts-list-types';
 
 import { hasLargeValueList } from '@kbn/securitysolution-list-utils';
 
 import type { FilterEventsAgainstListOptions, FilterEventsAgainstListReturn } from './types';
 import { partitionEvents } from './filter_events';
 import { createFieldAndSetTuples } from './create_field_and_set_tuples';
+
+const matchesScalarEntries = <T>(
+  event: estypes.SearchHit<T>,
+  exceptionItem: ExceptionListItemSchema
+): boolean => {
+  const scalarEntries = exceptionItem.entries.filter((entry) => !entriesList.is(entry));
+  if (scalarEntries.length === 0) return true;
+
+  return scalarEntries.every((entry) => {
+    const rawValue = event.fields?.[entry.field];
+    const fieldValues: string[] = rawValue == null ? [] : [rawValue].flat().map(String);
+
+    if (entriesMatch.is(entry)) {
+      const matched = fieldValues.includes(entry.value);
+      return entry.operator === 'included' ? matched : !matched;
+    }
+    if (entriesMatchAny.is(entry)) {
+      const matched = fieldValues.some((v) => entry.value.includes(v));
+      return entry.operator === 'included' ? matched : !matched;
+    }
+    if (entriesExists.is(entry)) {
+      const exists = fieldValues.length > 0;
+      return entry.operator === 'included' ? exists : !exists;
+    }
+    return true;
+  });
+};
 
 /**
  * Filters events against a large value based list. It does this through these
@@ -54,7 +89,7 @@ export const filterEventsAgainstList = async <T>({
     }
 
     const valueListExceptionItems = exceptionsList.filter((listItem: ExceptionListItemSchema) => {
-      return listItem.entries.every((entry) => entriesList.is(entry));
+      return listItem.entries.some((entry) => entriesList.is(entry));
     });
 
     // Every event starts out in the 'included' list, and each value list item checks all the
@@ -75,10 +110,19 @@ export const filterEventsAgainstList = async <T>({
           events: includedEvents,
           fieldAndSetTuples,
         });
+
+        const hasScalarEntries = exceptionItem.entries.some((entry) => !entriesList.is(entry));
+        const [finalExcludedEvents, restoredToIncluded] = hasScalarEntries
+          ? partition(nextExcludedEvents, (event) => matchesScalarEntries(event, exceptionItem))
+          : [nextExcludedEvents, [] as typeof nextExcludedEvents];
+
         ruleExecutionLogger.debug(
-          `Events filtered by exception: ${nextExcludedEvents.length}\nException ID: "${exceptionItem.id}".`
+          `Events filtered by exception: ${finalExcludedEvents.length}\nException ID: "${exceptionItem.id}".`
         );
-        return [nextIncludedEvents, [...excludedEvents, ...nextExcludedEvents]];
+        return [
+          [...nextIncludedEvents, ...restoredToIncluded],
+          [...excludedEvents, ...finalExcludedEvents],
+        ];
       },
       Promise.resolve<FilterEventsAgainstListReturn<T>>([events, []])
     );

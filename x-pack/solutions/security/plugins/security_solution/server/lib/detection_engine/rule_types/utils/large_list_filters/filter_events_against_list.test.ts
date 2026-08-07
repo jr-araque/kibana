@@ -483,6 +483,70 @@ describe('filterEventsAgainstList', () => {
       ]).toEqual(destIpVals);
     });
   });
+  describe('mixed list and scalar entries (POC)', () => {
+    const makeEvent = (sourceIp: string, destPort: number) => ({
+      _index: 'test',
+      _id: sourceIp,
+      _score: 100,
+      _source: { 'source.ip': sourceIp, 'destination.port': destPort },
+      fields: {
+        'source.ip': [sourceIp],
+        'destination.port': [destPort],
+      },
+      sort: ['1'],
+    });
+
+    it('excludes event only when both list and scalar conditions match', async () => {
+      const exceptionItem = getExceptionListItemSchemaMock();
+      exceptionItem.entries = [
+        {
+          field: 'source.ip',
+          operator: 'included',
+          type: 'list',
+          list: { id: 'trusted-ips.txt', type: 'ip' },
+        },
+        {
+          field: 'destination.port',
+          operator: 'included',
+          type: 'match',
+          value: '443',
+        },
+      ];
+
+      // source.ip values 1.1.1.1 and 2.2.2.2 are "in the list"
+      // value is an array of field-value arrays e.g. [['1.1.1.1'], ['2.2.2.2'], ...]
+      listClient.searchListItemByValues = jest.fn(({ value }) =>
+        Promise.resolve(
+          value
+            .filter((v: string[]) =>
+              ([] as string[]).concat(v).some((ip) => ['1.1.1.1', '2.2.2.2'].includes(ip))
+            )
+            .map((v: string[]) => ({ ...getSearchListItemResponseMock(), value: v }))
+        )
+      );
+
+      const events = [
+        makeEvent('1.1.1.1', 443), // list match + scalar match → excluded
+        makeEvent('2.2.2.2', 80),  // list match, scalar miss → included
+        makeEvent('3.3.3.3', 443), // list miss, scalar match → included
+        makeEvent('4.4.4.4', 80),  // list miss + scalar miss → included
+      ];
+
+      const [included, excluded] = await filterEventsAgainstList({
+        ruleExecutionLogger,
+        listClient,
+        exceptionsList: [exceptionItem],
+        // @ts-expect-error minimal event shape for POC
+        events,
+      });
+
+      expect(excluded.length).toEqual(1);
+      expect(included.length).toEqual(3);
+      expect(excluded[0].fields?.['source.ip']).toEqual(['1.1.1.1']);
+      expect(excluded[0].fields?.['destination.port']).toEqual([443]);
+    });
+  });
+
   describe('operator type is excluded', () => {
     it('should respond with empty list if no items match value list', async () => {
       const exceptionItem = getExceptionListItemSchemaMock();
