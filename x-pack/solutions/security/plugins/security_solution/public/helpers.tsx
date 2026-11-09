@@ -44,6 +44,7 @@ import { CASES_SUB_PLUGIN_KEY } from './types';
 import { timelineActions } from './timelines/store';
 import { TimelineId } from '../common/types';
 import { AllRulesTabs } from './detection_engine/rule_management_ui/components/rules_table/constants';
+import { RuleDetailTabs } from './detection_engine/rule_details_ui/pages/rule_details/use_rule_details_tabs';
 import { hasAccessToAttackDiscovery, hasAccessToSecuritySolution } from './helpers_access';
 
 export const parseRoute = (location: Pick<Location, 'hash' | 'pathname' | 'search'>) => {
@@ -221,6 +222,13 @@ export const isRulesManagementPath = (pathname: string): boolean =>
     strict: false,
   });
 
+export const isRuleDetailsPath = (pathname: string): boolean =>
+  !!matchPath(pathname, {
+    path: `${RULES_PATH}/id/:detailName/:tabName(${Object.values(RuleDetailTabs).join('|')})`,
+    exact: true,
+    strict: false,
+  });
+
 /**
  * Matches the MITRE coverage page, whose app header owns the page actions.
  */
@@ -246,6 +254,21 @@ export const isExceptionsPath = (pathname: string): boolean =>
     exact: false,
     strict: false,
   });
+
+/**
+ * Matches the pages migrated to the page app header, which render their own actions
+ * and therefore must not mount the legacy global header action menu.
+ */
+export const isPageWithAppHeaderPath = (pathname: string): boolean =>
+  [
+    isRuleChangesHistoryPath,
+    isRulesManagementPath,
+    isRulesAddPath,
+    isRuleDetailsPath,
+    isCoverageOverviewPath,
+    isExceptionsPath,
+    isCloudSecurityPosturePath,
+  ].some((matchesPath) => matchesPath(pathname));
 
 const isAlertsPath = (pathname: string): boolean => {
   return !!matchPath(pathname, {
