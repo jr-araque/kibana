@@ -66,7 +66,12 @@ export interface AppHeaderBadge {
 export interface AppHeaderBadgeItem {
   name: string;
   icon?: string;
-  onClick?: () => void;
+  /**
+   * Runs when the item is clicked. For items without child `items`, returning a promise keeps the
+   * menu open with a loading indicator on the item until the promise settles; otherwise the menu
+   * closes right away.
+   */
+  onClick?: () => void | Promise<unknown>;
   items?: AppHeaderBadgeItem[];
   popoverWidth?: number;
   'data-test-subj'?: string;

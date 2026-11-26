@@ -9,7 +9,7 @@
 
 import React from 'react';
 import '@testing-library/jest-dom';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { AppBadge } from './app_badge';
 import { APP_HEADER_TEST_SUBJECTS } from './test_subjects';
 
@@ -129,5 +129,62 @@ describe('AppBadge', () => {
     fireEvent.click(item);
 
     expect(screen.getByText('Read only')).toBeInTheDocument();
+  });
+
+  describe('when a leaf onClick returns a promise', () => {
+    const renderWithPendingAction = () => {
+      let settle: { resolve: () => void; reject: (error: Error) => void } | undefined;
+      const onItemClick = jest.fn(
+        () =>
+          new Promise<void>((resolve, reject) => {
+            settle = { resolve, reject };
+          })
+      );
+      render(
+        <AppBadge
+          badge={{
+            label: 'Enabled',
+            items: [
+              { name: 'Disable', onClick: onItemClick },
+              { name: 'Duplicate', onClick: jest.fn() },
+            ],
+          }}
+        />
+      );
+      return { onItemClick, getSettle: () => settle! };
+    };
+
+    const clickDisable = async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Click Enabled badge' }));
+      fireEvent.click(await screen.findByText('Disable'));
+    };
+
+    it('keeps the menu open with a loading item and disables the items while pending', async () => {
+      const { onItemClick } = renderWithPendingAction();
+      await clickDisable();
+
+      expect(onItemClick).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.getByText('Disable').closest('button')).toBeDisabled();
+      expect(screen.getByText('Duplicate').closest('button')).toBeDisabled();
+    });
+
+    it('closes the menu when the promise resolves', async () => {
+      const { getSettle } = renderWithPendingAction();
+      await clickDisable();
+
+      await act(async () => getSettle().resolve());
+
+      await waitFor(() => expect(screen.queryByText('Disable')).not.toBeInTheDocument());
+    });
+
+    it('closes the menu when the promise rejects', async () => {
+      const { getSettle } = renderWithPendingAction();
+      await clickDisable();
+
+      await act(async () => getSettle().reject(new Error('request failed')));
+
+      await waitFor(() => expect(screen.queryByText('Disable')).not.toBeInTheDocument());
+    });
   });
 });

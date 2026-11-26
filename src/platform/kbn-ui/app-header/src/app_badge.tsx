@@ -8,7 +8,7 @@
  */
 
 import React, { useCallback, useMemo, useState } from 'react';
-import { EuiBadge, EuiContextMenu, EuiPopover, EuiToolTip } from '@elastic/eui';
+import { EuiBadge, EuiContextMenu, EuiLoadingSpinner, EuiPopover, EuiToolTip } from '@elastic/eui';
 import type {
   EuiContextMenuPanelDescriptor,
   EuiContextMenuPanelItemDescriptor,
@@ -19,42 +19,44 @@ import type { AppHeaderBadge, AppHeaderBadgeItem } from './types';
 import { asOptionalPlainText, asPlainText } from './as_plain_text';
 import { APP_HEADER_TEST_SUBJECTS } from './test_subjects';
 
+interface LeafActions {
+  /** Key of the leaf item whose async action is running, if any. */
+  pendingKey?: string;
+  runLeaf: (key: string, onClick: () => void | Promise<unknown>) => void;
+}
+
 /**
  * Recursively builds flat EuiContextMenu panels from nested badge menu items.
  */
 const buildPanels = (
   items: AppHeaderBadgeItem[],
   panelId: number,
-  closePopover: () => void,
+  leafActions: LeafActions,
   width?: number,
   title?: string
 ): EuiContextMenuPanelDescriptor[] => {
+  const { pendingKey, runLeaf } = leafActions;
   const panels: EuiContextMenuPanelDescriptor[] = [];
   let nextPanelId = panelId + 1;
 
-  const panelItems: EuiContextMenuPanelItemDescriptor[] = items.map((item) => {
+  const panelItems: EuiContextMenuPanelItemDescriptor[] = items.map((item, index) => {
     // Explicit fields only — do not spread the consumer item into EUI.
     const { items: childItems, popoverWidth: childWidth, onClick } = item;
     const name = asPlainText(item.name);
     const isLeaf = !childItems || childItems.length === 0;
+    // Position-based key: consumers often rebuild item objects on every render.
+    const key = `${panelId}.${index}`;
     const panelItem: EuiContextMenuPanelItemDescriptor = {
       name,
-      icon: item.icon,
-      // Leaf actions close the menu first so it closes even if the action throws or is slow.
-      onClick:
-        isLeaf && onClick
-          ? () => {
-              closePopover();
-              onClick();
-            }
-          : onClick,
-      disabled: item.disabled,
+      icon: pendingKey === key ? <EuiLoadingSpinner size="m" /> : item.icon,
+      onClick: isLeaf && onClick ? () => runLeaf(key, onClick) : onClick,
+      disabled: item.disabled || pendingKey !== undefined,
       toolTipContent: asOptionalPlainText(item.toolTipContent),
       'data-test-subj': item['data-test-subj'],
     };
     if (!isLeaf) {
       const childPanelId = nextPanelId;
-      const childPanels = buildPanels(childItems, childPanelId, closePopover, childWidth, name);
+      const childPanels = buildPanels(childItems, childPanelId, leafActions, childWidth, name);
       nextPanelId = childPanelId + childPanels.length;
       panels.push(...childPanels);
       return { ...panelItem, panel: childPanelId };
@@ -90,8 +92,28 @@ export const AppBadge = ({ badge }: { badge: AppHeaderBadge }) => {
   const tooltip = asOptionalPlainText(badge.tooltip);
   const onClickAriaLabel = asOptionalPlainText(badge.onClickAriaLabel);
 
+  const [pendingKey, setPendingKey] = useState<string>();
+
   const closePopover = useCallback(() => setIsPopoverOpen(false), []);
   const togglePopover = useCallback(() => setIsPopoverOpen((open) => !open), []);
+
+  // A leaf action that returns a promise keeps the menu open, showing progress, until it settles.
+  const runLeaf = useCallback(
+    (key: string, onClick: () => void | Promise<unknown>) => {
+      const result = onClick();
+      if (!(result instanceof Promise)) {
+        closePopover();
+        return;
+      }
+      setPendingKey(key);
+      const settle = () => {
+        setPendingKey(undefined);
+        closePopover();
+      };
+      result.then(settle, settle);
+    },
+    [closePopover]
+  );
 
   if (badge?.renderCustomBadge) {
     // TODO: Remove custom JSX badge rendering once apps migrate custom badges to structured config.
@@ -152,7 +174,7 @@ export const AppBadge = ({ badge }: { badge: AppHeaderBadge }) => {
       >
         <EuiContextMenu
           initialPanelId={0}
-          panels={buildPanels(badge.items!, 0, closePopover, badge.popoverWidth)}
+          panels={buildPanels(badge.items!, 0, { pendingKey, runLeaf }, badge.popoverWidth)}
         />
       </EuiPopover>
     );
