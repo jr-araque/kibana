@@ -70,4 +70,64 @@ describe('AppBadge', () => {
     fireEvent.click(await screen.findByText('View details'));
     await waitFor(() => expect(onItemClick).toHaveBeenCalledTimes(1));
   });
+
+  it('closes the menu and calls onClick when a leaf item is clicked', async () => {
+    const onItemClick = jest.fn();
+    render(
+      <AppBadge badge={{ label: 'Enabled', items: [{ name: 'Disable', onClick: onItemClick }] }} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Click Enabled badge' }));
+    fireEvent.click(await screen.findByText('Disable'));
+
+    expect(onItemClick).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByText('Disable')).not.toBeInTheDocument());
+  });
+
+  it('keeps the menu open and shows the child panel when an item with child items is clicked', async () => {
+    const onParentClick = jest.fn();
+    render(
+      <AppBadge
+        badge={{
+          label: 'Managed',
+          items: [{ name: 'More', onClick: onParentClick, items: [{ name: 'Child action' }] }],
+        }}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Click Managed badge' }));
+    fireEvent.click(await screen.findByText('More'));
+
+    expect(await screen.findByText('Child action')).toBeInTheDocument();
+    expect(onParentClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the menu open and does not call onClick when a disabled item is clicked', async () => {
+    const onItemClick = jest.fn();
+    render(
+      <AppBadge
+        badge={{
+          label: 'Enabled',
+          items: [{ name: 'Disable', onClick: onItemClick, disabled: true }],
+        }}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Click Enabled badge' }));
+    fireEvent.click(await screen.findByText('Disable'));
+
+    expect(onItemClick).not.toHaveBeenCalled();
+    expect(screen.getByText('Disable')).toBeInTheDocument();
+  });
+
+  it('renders a leaf item without onClick as inert text and keeps the menu open when clicked', async () => {
+    render(<AppBadge badge={{ label: 'Managed', items: [{ name: 'Read only' }] }} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Click Managed badge' }));
+    const item = await screen.findByText('Read only');
+    expect(item.closest('button')).toBeNull();
+    fireEvent.click(item);
+
+    expect(screen.getByText('Read only')).toBeInTheDocument();
+  });
 });

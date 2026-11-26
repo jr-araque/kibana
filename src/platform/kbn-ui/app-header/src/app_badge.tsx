@@ -25,6 +25,7 @@ import { APP_HEADER_TEST_SUBJECTS } from './test_subjects';
 const buildPanels = (
   items: AppHeaderBadgeItem[],
   panelId: number,
+  closePopover: () => void,
   width?: number,
   title?: string
 ): EuiContextMenuPanelDescriptor[] => {
@@ -33,19 +34,27 @@ const buildPanels = (
 
   const panelItems: EuiContextMenuPanelItemDescriptor[] = items.map((item) => {
     // Explicit fields only — do not spread the consumer item into EUI.
-    const { items: childItems, popoverWidth: childWidth } = item;
+    const { items: childItems, popoverWidth: childWidth, onClick } = item;
     const name = asPlainText(item.name);
+    const isLeaf = !childItems || childItems.length === 0;
     const panelItem: EuiContextMenuPanelItemDescriptor = {
       name,
       icon: item.icon,
-      onClick: item.onClick,
+      // Leaf actions close the menu first so it closes even if the action throws or is slow.
+      onClick:
+        isLeaf && onClick
+          ? () => {
+              closePopover();
+              onClick();
+            }
+          : onClick,
       disabled: item.disabled,
       toolTipContent: asOptionalPlainText(item.toolTipContent),
       'data-test-subj': item['data-test-subj'],
     };
-    if (childItems && childItems.length > 0) {
+    if (!isLeaf) {
       const childPanelId = nextPanelId;
-      const childPanels = buildPanels(childItems, childPanelId, childWidth, name);
+      const childPanels = buildPanels(childItems, childPanelId, closePopover, childWidth, name);
       nextPanelId = childPanelId + childPanels.length;
       panels.push(...childPanels);
       return { ...panelItem, panel: childPanelId };
@@ -143,7 +152,7 @@ export const AppBadge = ({ badge }: { badge: AppHeaderBadge }) => {
       >
         <EuiContextMenu
           initialPanelId={0}
-          panels={buildPanels(badge.items!, 0, badge.popoverWidth)}
+          panels={buildPanels(badge.items!, 0, closePopover, badge.popoverWidth)}
         />
       </EuiPopover>
     );
